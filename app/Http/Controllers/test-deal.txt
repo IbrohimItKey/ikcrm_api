@@ -1,0 +1,250 @@
+<?php
+
+namespace Modules\ForTheBuilder\Http\Controllers;
+
+use App\components\ImageResize;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Modules\ForTheBuilder\Entities\DealsFile;
+use Modules\ForTheBuilder\Entities\House;
+use Modules\ForTheBuilder\Entities\HouseDocument;
+use Modules\ForTheBuilder\Entities\HouseFlat;
+use Modules\ForTheBuilder\Http\Requests\DealRequest;
+use Modules\ForTheBuilder\Entities\Deal;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+class DealController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        $models = Deal::orderBy('id','desc')->paginate(config('params.pagination'));
+        Log::channel('action_logs2')->info("пользователь просмотрел deal");
+
+        return view('forthebuilder::deal.index',[
+            'models' => $models
+        ]);
+    }
+
+
+    public function getFlat(Request $request)
+    {
+        $flats = HouseFlat::where("house_id", $request->house_id)->get();
+        return response()->json($flats);
+    }
+
+    /**
+    * Show the form for creating a new resource.
+    *
+    * @return \Illuminate\Http\Response
+    */
+    public function create()
+    {
+        $houses = House::all();
+        Log::channel('action_logs2')->info("пользователь хочет создать новую deal");
+
+        return view('forthebuilder::deal.create',[
+            'houses' => $houses
+        ]);
+    }
+    
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function store(DealRequest $request)
+    {
+        $data = $request->validated();
+        $data['user_id'] = Auth::user()->id;
+        $model = Deal::create($data);
+
+        if (!empty($data['files'])){
+            $j=0;
+            foreach($data['files'] as $file)
+            {
+                if ($file->getClientOriginalExtension() == 'jpg' || $file->getClientOriginalExtension() == 'png' || $file->getClientOriginalExtension() == 'jpeg'){
+                    $j++;
+                    $filenameget = $file->getClientOriginalName();
+                    $filenamehash = md5($filenameget.time()) . $j . '.' . $file->getClientOriginalExtension();
+                    $size = $file->getSize();
+
+                    DealsFile::create([
+                        'deal_id' => $model->id,
+                        'name' => $filenameget,
+                        'guid' => $filenamehash,
+                        'ext' => $file->getClientOriginalExtension(),
+                        'size' => $size,
+                        'main_image'=> $j == 1 ? 1 : 0,
+                    ]);
+
+                    $file->move(public_path('uploads/deal/' . $model->id), $filenamehash);
+
+                    $imageR = new ImageResize(public_path('uploads/deal/'.$model->id . '/' . $filenamehash));
+                    $imageR->resizeToBestFit(config('params.large_image.width'), config('params.large_image.width'))->save(public_path('uploads/deal/'.$model->id . '/l_' . $filenamehash));
+                    $imageR->resizeToWidth(config('params.medium_image.width'))->save(public_path('uploads/deal/'.$model->id . '/m_' . $filenamehash));
+                    $imageR->crop(config('params.small_image.width'), config('params.small_image.height'))->save( public_path('uploads/deal/'.$model->id . '/s_' . $filenamehash));
+
+                }else{
+                    $j++;
+                    $filenameget = $file->getClientOriginalName();
+                    $filenamehash = md5($filenameget.time()) . $j . '.' . $file->getClientOriginalExtension();
+                    $size = $file->getSize();
+
+                     DealsFile::create([
+                        'deal_id' => $model->id,
+                        'name' => $filenameget,
+                        'guid' => $filenamehash,
+                        'ext' => $file->getClientOriginalExtension(),
+                        'size' => $size,
+
+                    ]);
+
+                    $file->move(public_path('uploads/deal/' . $model->id), $filenamehash);
+
+                }
+
+            }
+        }
+        Log::channel('action_logs2')->info("пользователь создал новую deal : ",['info-data'=>$model]);
+
+        return redirect()->route('forthebuilder.deal.index')->with('success', __('locale.successfully'));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $model = Deal::findOrFail($id);
+        Log::channel('action_logs2')->info("пользователь показал deal",['info-data'=>$model]);
+        return view('forthebuilder::deal.show',[
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        $houses = House::all();
+        $model = Deal::findOrFail($id);
+        $houseFlats = HouseFlat::where('house_id',$model->house_flat->house_id)->get();
+        Log::channel('action_logs2')->info("пользователь собирается обновить deal",['info-data'=>$model]);
+        return view('forthebuilder::deal.edit',[
+            'model' => $model,
+            'houses' => $houses,
+            'houseFlats' => $houseFlats
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function update(DealRequest $request, $id)
+    {
+        $data = $request->validated();
+        $model = Deal::findOrFail($id);
+        
+        $model->user_id = Auth::user()->id;
+        $model->house_flat_id = $data['house_flat_id'];
+        $model->price_bought = $data['price_bought'];
+        $model->contract_number = $data['contract_number'];
+        $model->dateDl = $data['dateDl'];
+        $model->description = $data['description'];
+
+        $model->save();
+
+        if(!empty($data['files']))
+        {
+            $j=0;
+            foreach($data['files'] as $file)
+            {
+
+                if ($file->getClientOriginalExtension() == 'jpg' || $file->getClientOriginalExtension() == 'png' || $file->getClientOriginalExtension() == 'jpeg'){
+                    $j++;
+                    $filenameget = $file->getClientOriginalName();
+                    $filenamehash = md5($filenameget.time()) . $j . '.' . $file->getClientOriginalExtension();
+                    $size = $file->getSize();
+
+                    DealsFile::create([
+                        'deal_id' => $model->id,
+                        'name' => $filenameget,
+                        'guid' => $filenamehash,
+                        'ext' => $file->getClientOriginalExtension(),
+                        'size' => $size,
+                        'main_image'=> $j == 1 ? 1 : 0,
+                    ]);
+
+                    $file->move(public_path('uploads/deal/' . $id), $filenamehash);
+
+                    $imageR = new ImageResize(public_path('uploads/deal/'.$id . '/' . $filenamehash));
+                    $imageR->resizeToBestFit(config('params.large_image.width'), config('params.large_image.width'))->save(public_path('uploads/deal/'.$id . '/l_' . $filenamehash));
+                    $imageR->resizeToWidth(config('params.medium_image.width'))->save(public_path('uploads/deal/'.$id . '/m_' . $filenamehash));
+                    $imageR->crop(config('params.small_image.width'), config('params.small_image.height'))->save( public_path('uploads/deal/'.$id . '/s_' . $filenamehash));
+
+                }else{
+                    $j++;
+                    $filenameget = $file->getClientOriginalName();
+                    $filenamehash = md5($filenameget.time()) . $j . '.' . $file->getClientOriginalExtension();
+                    $size = $file->getSize();
+
+                    $model = DealsFile::create([
+                        'deal_id' => $model->id,
+                        'name' => $filenameget,
+                        'guid' => $filenamehash,
+                        'ext' => $file->getClientOriginalExtension(),
+                        'size' => $size,
+
+                    ]);
+
+                    $file->move(public_path('uploads/deal/' . $id), $filenamehash);
+
+                }
+
+            }
+        }
+
+        Log::channel('action_logs2')->info("пользователь обновил deal",['info-data'=>$model]);
+        return redirect()->route('forthebuilder.deal.index')->with('success', __('locale.successfully'));
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $model = Deal::findOrFail($id);
+        $model->delete();
+        Log::channel('action_logs2')->info("пользователь удалил deal",['info-data'=>$model]);
+        return back()->with('success', __('locale.deleted'));
+    }
+
+    public function destroy_file_item(Request $request,$id)
+    {
+        if($request->ajax()) {
+            $model = DealsFile::findOrFail($id);
+            File::delete(public_path('uploads/deal/'.$model->deal_id.'/'.$model->guid));
+            $model->delete();
+            return response()->json([
+                'success' => __('locale.deleted')
+            ]);
+        }
+
+    }
+}
