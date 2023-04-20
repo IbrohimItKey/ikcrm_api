@@ -6,9 +6,9 @@ use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Modules\ForTheBuilder\Entities\Coupon;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Http\Requests\CouponRequest;
+use App\Models\Coupon;
+use App\Models\Notification_;
+use App\Http\Requests\CouponRequest;
 
 class CouponContoller extends Controller
 {

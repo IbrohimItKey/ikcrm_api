@@ -139,7 +139,12 @@
                     "405": {
                         "description": "Invalid input"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
             }
         },
         "/api/clients": {
@@ -176,12 +181,21 @@
                         "description": "Invalid status value"
                     }
                 },
-                "deprecated": true,
                 "security": [
                     {
                         "bearer_token": []
                     }
                 ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearer_token": {
+                "type": "apiKey",
+                "description": "Sanctum security laravel",
+                "name": "Authorization",
+                "in": "header"
             }
         }
     }

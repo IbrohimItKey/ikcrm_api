@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Modules\ForTheBuilder\Entities\ActionLogs;
-use Modules\ForTheBuilder\Entities\Notification_;
+use App\Models\ActionLogs;
+use App\Models\Notification_;
 
 class ActionLogsController extends Controller
 {

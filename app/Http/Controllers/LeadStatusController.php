@@ -7,9 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Modules\ForTheBuilder\Entities\LeadStatus;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Http\Requests\LeadStatusRequest;
+use App\Models\LeadStatus;
+use App\Models\Notification_;
+use App\Http\Requests\LeadStatusRequest;
 
 class LeadStatusController extends Controller
 {

@@ -6,8 +6,8 @@ use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Modules\ForTheBuilder\Entities\Currency;
-use Modules\ForTheBuilder\Entities\Notification_;
+use App\Models\Currency;
+use App\Models\Notification_;
 
 class CurrencyController extends Controller
 {

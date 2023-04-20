@@ -8,23 +8,23 @@ use App\Http\Controllers\Controller;
 use Facade\FlareClient\Http\Client;
 use Facade\FlareClient\Http\Response;
 use Illuminate\Support\Facades\File;
-use Modules\ForTheBuilder\Entities\HouseFlat;
-use Modules\ForTheBuilder\Entities\Leads;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Http\Requests\HouseRequest;
-use Modules\ForTheBuilder\Entities\House;
-use Modules\ForTheBuilder\Entities\StatusColors;
+use App\Models\HouseFlat;
+use App\Models\Leads;
+use App\Models\Notification_;
+use App\Http\Requests\HouseRequest;
+use App\Models\House;
+use App\Models\StatusColors;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Modules\ForTheBuilder\Entities\BasketHouse;
-use Modules\ForTheBuilder\Entities\BasketHouseDocument;
-use Modules\ForTheBuilder\Entities\BasketHouseFlat;
-use Modules\ForTheBuilder\Entities\Clients;
-use Modules\ForTheBuilder\Entities\Constants;
-use Modules\ForTheBuilder\Entities\HouseDocument;
-use Modules\ForTheBuilder\Http\Requests\HouseFlatPricesRequest;
+use App\Models\BasketHouse;
+use App\Models\BasketHouseDocument;
+use App\Models\BasketHouseFlat;
+use App\Models\Clients;
+use App\Models\Constants;
+use App\Models\HouseDocument;
+use App\Http\Requests\HouseFlatPricesRequest;
 
 class HouseController extends Controller
 {

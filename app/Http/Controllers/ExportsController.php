@@ -7,10 +7,10 @@ use Facade\FlareClient\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
-use Modules\ForTheBuilder\Entities\Deal;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Exports\RassrochkaExport;
-use Modules\ForTheBuilder\Exports\LeadsExport;
+use App\Models\Deal;
+use App\Models\Notification_;
+use App\Exports\RassrochkaExport;
+use App\Exports\LeadsExport;
 use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Response;
 

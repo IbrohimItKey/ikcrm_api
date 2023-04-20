@@ -2,39 +2,39 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Deal;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-// use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
-use Modules\ForTheBuilder\Entities\Currency;
-use Modules\ForTheBuilder\Entities\Deal;
-use Modules\ForTheBuilder\Entities\House;
-use Modules\ForTheBuilder\Entities\HouseFlat;
-use Modules\ForTheBuilder\Entities\InstallmentPlan;
-use Modules\ForTheBuilder\Entities\LeadComment;
-use Modules\ForTheBuilder\Entities\Clients;
-use Modules\ForTheBuilder\Entities\LeadStatus;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Entities\PersonalInformations;
-use Modules\ForTheBuilder\Entities\StatusColors;
-use Modules\ForTheBuilder\Exports\LeadsExport;
-use Modules\ForTheBuilder\Http\Requests\ClientsRequest;
-use Modules\ForTheBuilder\Imports\LeadsImport;
-use Modules\ForTheBuilder\Http\Requests\TaskRequest;
+use App\Models\Currency;
+use App\Models\House;
+use App\Models\HouseFlat;
+use App\Models\InstallmentPlan;
+use App\Models\LeadComment;
+use App\Models\Clients;
+use App\Models\LeadStatus;
+use App\Models\Notification_;
+use App\Models\PersonalInformations;
+use App\Models\StatusColors;
+use App\Exports\LeadsExport;
+use App\Http\Requests\ClientsRequest;
+use App\Imports\LeadsImport;
+use App\Http\Requests\TaskRequest;
 use Illuminate\Support\Facades\Auth;
-use Modules\ForTheBuilder\Entities\Task;
-use Modules\ForTheBuilder\Events\RealTimeMessage;
-use Modules\ForTheBuilder\Notifications\TaskNotification;
+use App\Models\Task;
+use App\Events\RealTimeMessage;
+use App\Notifications\TaskNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Models\User;
-use Modules\ForTheBuilder\Entities\Booking;
-use Modules\ForTheBuilder\Entities\Chat;
-use Modules\ForTheBuilder\Entities\Constants;
-use Modules\ForTheBuilder\Entities\PayStatus;
+use App\Models\Booking;
+use App\Models\Chat;
+use App\Models\Constants;
+use App\Models\PayStatus;
 use PHPUnit\TextUI\XmlConfiguration\Constant;
 
 class ClientsController extends Controller
@@ -72,7 +72,6 @@ class ClientsController extends Controller
      *     summary="Get Clients",
      *     description="Get Clients",
      *     operationId="Index",
-     *     deprecated=true,
      *     @OA\Parameter(
      *         name="status",
      *         in="query",
@@ -96,7 +95,7 @@ class ClientsController extends Controller
      *     ),
      *     security={
      *         {"bearer_token": {}}
-     *     }
+     *     },
      * )
      */
     public function Index()
@@ -107,16 +106,16 @@ class ClientsController extends Controller
             // ->select('id', 'user_id', 'house_flat_id', 'price_sell', 'date_deal', 'description')
             ->orderBy('type', 'asc')->get(); //->paginate(config('params.pagination'));
 
-        $defaultAction = [
-            Constants::FIRST_CONTACT => translate('First contact'),
-            Constants::NEGOTIATION => translate('Negotiation'),
-            Constants::MAKE_DEAL => translate('Making a deal'),
-        ];
+//        $defaultAction = [
+//            Constants::FIRST_CONTACT => translate('First contact'),
+//            Constants::NEGOTIATION => translate('Negotiation'),
+//            Constants::MAKE_DEAL => translate('Making a deal'),
+//        ];
         $response = [
             'status'=>'success',
             'data'=>[
                 'models' => $models,
-                'defaultAction' => $defaultAction,
+//                'defaultAction' => $defaultAction,
                 'all_notifications' => $this->getNotification()
             ]
         ];

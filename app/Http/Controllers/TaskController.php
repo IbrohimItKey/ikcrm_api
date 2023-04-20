@@ -11,14 +11,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
-use Modules\ForTheBuilder\Entities\Clients;
-use Modules\ForTheBuilder\Entities\Constants;
-use Modules\ForTheBuilder\Entities\PayStatus;
-use Modules\ForTheBuilder\Entities\Task;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Events\RealTimeMessage;
-use Modules\ForTheBuilder\Http\Requests\TaskRequest;
-use Modules\ForTheBuilder\Notifications\TaskNotification;
+use App\Models\Clients;
+use App\Models\Constants;
+use App\Models\PayStatus;
+use App\Models\Task;
+use App\Models\Notification_;
+use App\Events\RealTimeMessage;
+use App\Http\Requests\TaskRequest;
+use App\Notifications\TaskNotification;
 
 class TaskController extends Controller
 {

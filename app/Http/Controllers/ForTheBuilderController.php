@@ -7,15 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
-use Modules\ForTheBuilder\Entities\House;
-use Modules\ForTheBuilder\Entities\HouseFlat;
-use Modules\ForTheBuilder\Entities\Leads;
-use Modules\ForTheBuilder\Entities\LeadStatus;
+use App\Models\House;
+use App\Models\HouseFlat;
+use App\Models\Leads;
+use App\Models\LeadStatus;
 use Illuminate\Support\Facades\DB;
-use Modules\ForTheBuilder\Entities\Constants;
+use App\Models\Constants;
 use Carbon\Carbon;
-use Modules\ForTheBuilder\Entities\Deal;
-use Modules\ForTheBuilder\Entities\Notification_;
+use App\Models\Deal;
+use App\Models\Notification_;
 
 
 class ForTheBuilderController extends Controller

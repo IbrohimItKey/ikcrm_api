@@ -14,9 +14,9 @@ use Illuminate\Support\Facades\Hash;
 use App\components\ImageResize;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Entities\Task;
-use Modules\ForTheBuilder\Http\Requests\ForTheBuilderUserRequest;
+use App\Models\Notification_;
+use App\Models\Task;
+use App\Http\Requests\ForTheBuilderUserRequest;
 
 class UserController extends Controller
 {

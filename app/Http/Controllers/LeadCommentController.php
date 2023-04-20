@@ -8,14 +8,14 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Modules\ForTheBuilder\Entities\Deal;
-use Modules\ForTheBuilder\Entities\DealsFile;
-use Modules\ForTheBuilder\Entities\HouseFlat;
-use Modules\ForTheBuilder\Entities\LeadComment;
-use Modules\ForTheBuilder\Entities\Leads;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Http\Requests\LeadCommentRequest;
-use Modules\ForTheBuilder\Http\Requests\LeadsRequest;
+use App\Models\Deal;
+use App\Models\DealsFile;
+use App\Models\HouseFlat;
+use App\Models\LeadComment;
+use App\Models\Leads;
+use App\Models\Notification_;
+use App\Http\Requests\LeadCommentRequest;
+use App\Http\Requests\LeadsRequest;
 
 class LeadCommentController extends Controller
 {

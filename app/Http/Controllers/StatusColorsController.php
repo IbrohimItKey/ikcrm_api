@@ -6,9 +6,9 @@ use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Entities\StatusColors;
-use Modules\ForTheBuilder\Http\Requests\ColorsRequest;
+use App\Models\Notification_;
+use App\Models\StatusColors;
+use App\Http\Requests\ColorsRequest;
 
 class StatusColorsController extends Controller
 {

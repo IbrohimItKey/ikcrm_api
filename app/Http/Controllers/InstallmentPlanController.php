@@ -9,14 +9,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Modules\ForTheBuilder\Entities\Deal;
-use Modules\ForTheBuilder\Entities\HouseFlat;
-use Modules\ForTheBuilder\Entities\InstallmentPlan;
-// use Modules\ForTheBuilder\Entities\Leads;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Entities\PayStatus;
-use Modules\ForTheBuilder\Entities\Constants;
-use Modules\ForTheBuilder\Http\Requests\InstallmentPlanRequest;
+use App\Models\Deal;
+use App\Models\HouseFlat;
+use App\Models\InstallmentPlan;
+// use App\Models\Leads;
+use App\Models\Notification_;
+use App\Models\PayStatus;
+use App\Models\Constants;
+use App\Http\Requests\InstallmentPlanRequest;
 
 class InstallmentPlanController extends Controller
 {

@@ -8,6 +8,7 @@ use http\Env\Response;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -140,8 +141,10 @@ class AuthController extends Controller
        }
        $token = $user->createToken('myapptoken')->plainTextToken;
        $response = [
-         'user'=>$user,
-         'token'=>$token
+           'status'=>true,
+           'message'=>'Success',
+           'token'=>$token,
+           'user'=>$user
        ];
        return response($response, 201);
    }
@@ -164,11 +167,17 @@ class AuthController extends Controller
      *                 type="object",
      *             )
      *         )
-     *     )
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     }
      * )
      */
     public function Logout(Request $request) {
         auth()->user()->tokens()->delete();
-        return response('success', 'logged out');
+        $response = [
+            'status'=>'Logged out'
+        ];
+        return response($response);
     }
 }

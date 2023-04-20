@@ -14,17 +14,17 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
-use Modules\ForTheBuilder\Entities\Booking;
-use Modules\ForTheBuilder\Entities\Constants;
-use Modules\ForTheBuilder\Entities\Coupon;
-use Modules\ForTheBuilder\Entities\Currency;
-use Modules\ForTheBuilder\Entities\Deal;
-use Modules\ForTheBuilder\Entities\House;
-use Modules\ForTheBuilder\Entities\HouseFlat;
-use Modules\ForTheBuilder\Entities\HouseDocument;
-use Modules\ForTheBuilder\Entities\Notification_;
-use Modules\ForTheBuilder\Http\Requests\HouseRequest;
-use Modules\ForTheBuilder\Http\Requests\HouseFlatRequest;
+use App\Models\Booking;
+use App\Models\Constants;
+use App\Models\Coupon;
+use App\Models\Currency;
+use App\Models\Deal;
+use App\Models\House;
+use App\Models\HouseFlat;
+use App\Models\HouseDocument;
+use App\Models\Notification_;
+use App\Http\Requests\HouseRequest;
+use App\Http\Requests\HouseFlatRequest;
 
 class HouseFlatController extends Controller
 {
