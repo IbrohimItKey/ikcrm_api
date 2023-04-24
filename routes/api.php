@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientsController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\HouseController;
+use App\Http\Controllers\ForTheBuilderController;
 use App\Models\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,9 @@ Route::post('/register', [\App\Http\Controllers\AuthController::class, 'Register
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'Login']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
+    
+    Route::get('/dashboard', [ForTheBuilderController::class, 'index']);
+
     Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'Logout']);
     Route::get('/house', [\App\Http\Controllers\HouseController::class, 'index']);
     Route::group(['prefix' => 'clients'], function () {
