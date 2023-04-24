@@ -6,6 +6,8 @@ use App\Http\Controllers\InstallmentPlanController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\HouseController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ForTheBuilderController;
+use App\Http\Controllers\BookingController;
 use App\Models\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +29,9 @@ Route::post('/login', [AuthController::class, 'Login']);
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/logout', [AuthController::class, 'Logout']);
     Route::get('/house', [HouseController::class, 'index']);
+
+    Route::get('/dashboard', [ForTheBuilderController::class, 'index']);
+
     Route::group(['prefix' => 'clients'], function () {
         Route::get('/index', [ClientsController::class, 'Index']);
         Route::get('/show', [ClientsController::class, 'show'])->name('clients.show');
@@ -41,5 +46,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::group(['prefix' => 'deal'], function () {
         Route::get('/index', [DealController::class, 'index']);
         Route::get('/update-status', [DealController::class, 'updateStatus']);
+    });
+    Route::group(['prefix' => 'booking'], function () {
+        Route::get('/index', [BookingController::class, 'index']);
+        // Route::get('/update-status', [BookingController::class, 'updateStatus']);
     });
 });
