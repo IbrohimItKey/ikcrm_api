@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ClientsController;
+use App\Http\Controllers\DealController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,8 +20,15 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [\App\Http\Controllers\AuthController::class, 'Register']);
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'Login']);
 Route::group(['middleware' => ['auth:sanctum']], function () {
-    Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'Logout']);
+    Route::get('/logout', [\App\Http\Controllers\AuthController::class, 'Logout']);
     Route::group(['prefix' => 'clients'], function () {
-        Route::get('/', [ClientsController::class, 'Index']);
+        Route::get('/index', [ClientsController::class, 'Index']);
+    });
+    Route::group(['prefix' => 'task'], function () {
+        Route::get('/index', [TaskController::class, 'index']);
+    });
+    Route::group(['prefix' => 'deal'], function () {
+        Route::get('/index', [DealController::class, 'index']);
+        Route::get('/update-status', [DealController::class, 'updateStatus']);
     });
 });
