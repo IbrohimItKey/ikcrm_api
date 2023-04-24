@@ -34,21 +34,24 @@ class HouseController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function getNotification(){
-        $notification = ['Booking', 'BookingPrepayment'];
-        $all_task = Notification_::where('type', 'Task')->where(['read_at' => NULL,  'user_id' => Auth::user()->id])->orderBy('created_at', 'desc')->get();
-        $all_booking = Notification_::whereIn('type', $notification)->where('read_at', NULL)->orderBy('created_at', 'desc')->get();
-        return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
-    }
+    // public function getNotification()
+    // {
+    //     $notification = ['Booking', 'BookingPrepayment'];
+    //     $all_task = Notification_::where('type', 'Task')->where(['read_at' => NULL,  'user_id' => Auth::user()->id])->orderBy('created_at', 'desc')->get();
+    //     $all_booking = Notification_::whereIn('type', $notification)->where('read_at', NULL)->orderBy('created_at', 'desc')->get();
+    //     return ['all_task' => $all_task, 'all_booking' => $all_booking];
+    // }
 
     public function index()
     {
-        $models = House::orderBy('id', 'desc')->paginate(config('params.pagination'));
-        return view('forthebuilder::house.index', [
-            'models' => $models,
-            'status' => '',
-            'all_notifications' => $this->getNotification()
-        ]);
+        $models = House::select('id', 'name', 'description', 'corpus')->orderBy('id', 'desc')->get(); // ->paginate(config('params.pagination'));
+
+        $response = [
+            'status' => true,
+            'message' => 'success',
+            'data' => $models
+        ];
+        return  response($response);
     }
 
     /**
@@ -56,167 +59,167 @@ class HouseController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-        return view('forthebuilder::house.create', ['all_notifications' => $this->getNotification()]);
-    }
+    // public function create()
+    // {
+    //     return view('forthebuilder::house.create', ['all_notifications' => $this->getNotification()]);
+    // }
 
     /**
      * Store a newly created resource in storage.
      *
      * @return \Illuminate\Http\Response
      */
-    public function store(HouseRequest $request)
-    {
-        DB::beginTransaction();
-        try {
-            $data = $request->validated();
+    // public function store(HouseRequest $request)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $data = $request->validated();
 
-            $model = House::create($data);
-            // dd($model);
-            $n = 1;
-            for ($i = 1; $i <= $model->enterance_count; $i++) {
-                for ($j = 1; $j <= $model->floor_count; $j++) {
-                    for ($l = 1; $l <= ($model->number_apartment_one_floor / $model->enterance_count); $l++) {
-                        $newHouseFlat = new HouseFlat();
-                        $newHouseFlat->house_id = $model->id;
-                        $newHouseFlat->number_of_flat = $n++;
-                        $newHouseFlat->floor = $j;
-                        $newHouseFlat->enterance = $i;
-                        $newHouseFlat->room_count = 0;
-                        $newHouseFlat->total_area = 0;
-                        $newHouseFlat->area = 0;
-                        $newHouseFlat->status = HouseFlat::STATUS_FREE;
-                        $newHouseFlat->save();
-                    }
-                }
-            }
+    //         $model = House::create($data);
+    //         // dd($model);
+    //         $n = 1;
+    //         for ($i = 1; $i <= $model->enterance_count; $i++) {
+    //             for ($j = 1; $j <= $model->floor_count; $j++) {
+    //                 for ($l = 1; $l <= ($model->number_apartment_one_floor / $model->enterance_count); $l++) {
+    //                     $newHouseFlat = new HouseFlat();
+    //                     $newHouseFlat->house_id = $model->id;
+    //                     $newHouseFlat->number_of_flat = $n++;
+    //                     $newHouseFlat->floor = $j;
+    //                     $newHouseFlat->enterance = $i;
+    //                     $newHouseFlat->room_count = 0;
+    //                     $newHouseFlat->total_area = 0;
+    //                     $newHouseFlat->area = 0;
+    //                     $newHouseFlat->status = HouseFlat::STATUS_FREE;
+    //                     $newHouseFlat->save();
+    //                 }
+    //             }
+    //         }
 
-            Log::channel('action_logs2')->info("пользователь создал новую house : ", ['info-data' => $model]);
+    //         Log::channel('action_logs2')->info("пользователь создал новую house : ", ['info-data' => $model]);
 
-            DB::commit();
-            return redirect()->route('forthebuilder.house.index')->with('success', translate('Data successfully created'));
-        } catch (\Exception $e) {
-            die(',,,,,,,');
-            DB::rollback();
-            return $e->getMessage();
-        }
-    }
+    //         DB::commit();
+    //         return redirect()->route('forthebuilder.house.index')->with('success', translate('Data successfully created'));
+    //     } catch (\Exception $e) {
+    //         die(',,,,,,,');
+    //         DB::rollback();
+    //         return $e->getMessage();
+    //     }
+    // }
 
     /**
      * New-basket_house a newly created resource in storage.
      *
      * @return \Illuminate\Http\Response
      */
-    public function newBasketHouse(HouseRequest $request)
-    {
-        DB::beginTransaction();
-        try {
-            $data = $request->validated();
-            // $model = BasketHouse::create($data);
-            $has_basement = ($request->has_basement == 'on') ? true : false;
-            $has_attic = ($request->has_attic == 'on') ? true : false;
-            $model = BasketHouse::create([
-                'name' => $request->name,
-                'description' => $request->description,
-                'corpus' => $request->corpus,
-                'entrance_count' => $request->entrance_count,
-                'floor_count' => $request->floor_count,
-                'project_stage' => $request->project_stage,
-                'total_flat' => $request->total_flat,
-                'entrance_one_floor_count' => $request->entrance_one_floor_count,
-                'has_basement' => $has_basement,
-                'has_attic' => $has_attic
-            ]);
-            $n = 1;
-            for ($i = 1; $i <= $model->entrance_count; $i++) {
-                for ($j = 1; $j <= $model->floor_count; $j++) {
-                    for ($l = 1; $l <= ($model->entrance_one_floor_count); $l++) {
-                        $newHouseFlat = new BasketHouseFlat();
-                        $newHouseFlat->basket_house_id = $model->id;
-                        $newHouseFlat->number_of_flat = $n;
-                        $newHouseFlat->doc_number = $n;
-                        $newHouseFlat->floor = $j;
-                        $newHouseFlat->entrance = $i;
-                        $newHouseFlat->room_count = 0;
-                        $newHouseFlat->additional_type = BasketHouseFlat::FLAT;
-                        $newHouseFlat->save();
-                        $n++;
+    // public function newBasketHouse(HouseRequest $request)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $data = $request->validated();
+    //         // $model = BasketHouse::create($data);
+    //         $has_basement = ($request->has_basement == 'on') ? true : false;
+    //         $has_attic = ($request->has_attic == 'on') ? true : false;
+    //         $model = BasketHouse::create([
+    //             'name' => $request->name,
+    //             'description' => $request->description,
+    //             'corpus' => $request->corpus,
+    //             'entrance_count' => $request->entrance_count,
+    //             'floor_count' => $request->floor_count,
+    //             'project_stage' => $request->project_stage,
+    //             'total_flat' => $request->total_flat,
+    //             'entrance_one_floor_count' => $request->entrance_one_floor_count,
+    //             'has_basement' => $has_basement,
+    //             'has_attic' => $has_attic
+    //         ]);
+    //         $n = 1;
+    //         for ($i = 1; $i <= $model->entrance_count; $i++) {
+    //             for ($j = 1; $j <= $model->floor_count; $j++) {
+    //                 for ($l = 1; $l <= ($model->entrance_one_floor_count); $l++) {
+    //                     $newHouseFlat = new BasketHouseFlat();
+    //                     $newHouseFlat->basket_house_id = $model->id;
+    //                     $newHouseFlat->number_of_flat = $n;
+    //                     $newHouseFlat->doc_number = $n;
+    //                     $newHouseFlat->floor = $j;
+    //                     $newHouseFlat->entrance = $i;
+    //                     $newHouseFlat->room_count = 0;
+    //                     $newHouseFlat->additional_type = BasketHouseFlat::FLAT;
+    //                     $newHouseFlat->save();
+    //                     $n++;
 
-                        if ($j == 1 && isset($request->has_basement) && $request->has_basement == true) {
-                            $newBasementFlat = new BasketHouseFlat();
-                            $newBasementFlat->basket_house_id = $model->id;
-                            $newBasementFlat->number_of_flat = $n++;
-                            $newBasementFlat->floor = 0;
-                            $newBasementFlat->entrance = $i;
-                            $newBasementFlat->room_count = 0;
-                            $newBasementFlat->additional_type = BasketHouseFlat::BASEMENT;
-                            $newBasementFlat->basket_house_flat_id = $newHouseFlat->id;
-                            $newBasementFlat->save();
-                        }
+    //                     if ($j == 1 && isset($request->has_basement) && $request->has_basement == true) {
+    //                         $newBasementFlat = new BasketHouseFlat();
+    //                         $newBasementFlat->basket_house_id = $model->id;
+    //                         $newBasementFlat->number_of_flat = $n++;
+    //                         $newBasementFlat->floor = 0;
+    //                         $newBasementFlat->entrance = $i;
+    //                         $newBasementFlat->room_count = 0;
+    //                         $newBasementFlat->additional_type = BasketHouseFlat::BASEMENT;
+    //                         $newBasementFlat->basket_house_flat_id = $newHouseFlat->id;
+    //                         $newBasementFlat->save();
+    //                     }
 
-                        if ($j == $model->floor_count && isset($request->has_attic) && $request->has_attic == true) {
-                            $newAtticFlat = new BasketHouseFlat();
-                            $newAtticFlat->basket_house_id = $model->id;
-                            $newAtticFlat->number_of_flat = $n++;
-                            $newAtticFlat->floor = $j + 1;
-                            $newAtticFlat->entrance = $i;
-                            $newAtticFlat->room_count = 0;
-                            $newAtticFlat->additional_type = BasketHouseFlat::ATTIC;
-                            $newAtticFlat->basket_house_flat_id = $newHouseFlat->id;
-                            $newAtticFlat->save();
-                        }
-                    }
-                }
-            }
+    //                     if ($j == $model->floor_count && isset($request->has_attic) && $request->has_attic == true) {
+    //                         $newAtticFlat = new BasketHouseFlat();
+    //                         $newAtticFlat->basket_house_id = $model->id;
+    //                         $newAtticFlat->number_of_flat = $n++;
+    //                         $newAtticFlat->floor = $j + 1;
+    //                         $newAtticFlat->entrance = $i;
+    //                         $newAtticFlat->room_count = 0;
+    //                         $newAtticFlat->additional_type = BasketHouseFlat::ATTIC;
+    //                         $newAtticFlat->basket_house_flat_id = $newHouseFlat->id;
+    //                         $newAtticFlat->save();
+    //                     }
+    //                 }
+    //             }
+    //         }
 
-            $oldModel = BasketHouse::where('id', '!=', $model->id)->delete();
-            $oldModel = BasketHouseFlat::where('basket_house_id', '!=', $model->id)->delete();
+    //         $oldModel = BasketHouse::where('id', '!=', $model->id)->delete();
+    //         $oldModel = BasketHouseFlat::where('basket_house_id', '!=', $model->id)->delete();
 
-            // Log::channel('action_logs2')->info("пользователь создал новую house : ", ['info-data' => $model]);
+    //         // Log::channel('action_logs2')->info("пользователь создал новую house : ", ['info-data' => $model]);
 
-            DB::commit();
-            return redirect()->route('forthebuilder.house.basket-show', ['id' => $model->id])->with('success', translate('Data successfully created'));
-        } catch (\Exception $e) {
-            DB::rollback();
-            return $e->getMessage();
-        }
-    }
+    //         DB::commit();
+    //         return redirect()->route('forthebuilder.house.basket-show', ['id' => $model->id])->with('success', translate('Data successfully created'));
+    //     } catch (\Exception $e) {
+    //         DB::rollback();
+    //         return $e->getMessage();
+    //     }
+    // }
 
     /**
      * Display the specified resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
-    {
-        $model = House::findOrFail($id);
-        return view('forthebuilder::house.show', [
-            'model' => $model,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
+    // public function show($id)
+    // {
+    //     $model = House::findOrFail($id);
+    //     return view('forthebuilder::house.show', [
+    //         'model' => $model,
+    //         'all_notifications' => $this->getNotification()
+    //     ]);
+    // }
 
-    public function showMoreNew($id)
-    {
-        $model = House::findOrFail($id);
-        $flats = HouseFlat::select('id', 'floor', 'enterance', 'status', 'number_of_flat', 'price', 'total_area')->where('house_id', $model->id)->get();
-        $statusColors = StatusColors::select('id', 'color', 'status')->get();
+    // public function showMoreNew($id)
+    // {
+    //     $model = House::findOrFail($id);
+    //     $flats = HouseFlat::select('id', 'floor', 'enterance', 'status', 'number_of_flat', 'price', 'total_area')->where('house_id', $model->id)->get();
+    //     $statusColors = StatusColors::select('id', 'color', 'status')->get();
 
-        $colors = [];
-        if (!empty($statusColors)) {
-            foreach ($statusColors as $value) {
-                $colors[$value->status] = $value->color;
-            }
-        }
+    //     $colors = [];
+    //     if (!empty($statusColors)) {
+    //         foreach ($statusColors as $value) {
+    //             $colors[$value->status] = $value->color;
+    //         }
+    //     }
 
-        return view('forthebuilder::house.show-more-new', [
-            'model' => $model,
-            'flats' => $flats,
-            'colors' => $colors,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
+    //     return view('forthebuilder::house.show-more-new', [
+    //         'model' => $model,
+    //         'flats' => $flats,
+    //         'colors' => $colors,
+    //         'all_notifications' => $this->getNotification()
+    //     ]);
+    // }
 
     // public function showMoreSecond($id)
     // {
@@ -315,254 +318,254 @@ class HouseController extends Controller
     //     ]);
     // }
 
-    public function showMore($id)
-    {
-        $model = House::findOrFail($id);
-        $flats = HouseFlat::select('id', 'floor', 'entrance', 'status', 'number_of_flat', 'price', 'areas', 'room_count')->where('house_id', $model->id)->orderBy('entrance', 'asc')->orderBy('floor', 'desc');
-        if ($model->sort == 1) {
-            $flats = $flats->orderBy('number_of_flat', 'desc');
-        } else {
-            $flats = $flats->orderBy('number_of_flat', 'asc');
-        }
-        $flats = $flats->get();
-        // pre($flats);
-        $statusColors = StatusColors::select('id', 'color', 'status')->get();
-        $arr = [];
-        $i_default = ($model->has_basement) ? 0 : 1;
-        $j_default = ($model->has_attic) ? $model->floor_count + 1 : $model->floor_count;
-        // dd($j_default);
-        for ($i = 1; $i <= $model->entrance_count; $i++) {
-            for ($j = $j_default; $j >= $i_default; $j--) {
-                $f_j = $j;
-                // echo $j . '>' . $model->floor_count . '<br>';
-                if ($j > $model->floor_count)
-                    $f_j = translate('attic');
+    // public function showMore($id)
+    // {
+    //     $model = House::findOrFail($id);
+    //     $flats = HouseFlat::select('id', 'floor', 'entrance', 'status', 'number_of_flat', 'price', 'areas', 'room_count')->where('house_id', $model->id)->orderBy('entrance', 'asc')->orderBy('floor', 'desc');
+    //     if ($model->sort == 1) {
+    //         $flats = $flats->orderBy('number_of_flat', 'desc');
+    //     } else {
+    //         $flats = $flats->orderBy('number_of_flat', 'asc');
+    //     }
+    //     $flats = $flats->get();
+    //     // pre($flats);
+    //     $statusColors = StatusColors::select('id', 'color', 'status')->get();
+    //     $arr = [];
+    //     $i_default = ($model->has_basement) ? 0 : 1;
+    //     $j_default = ($model->has_attic) ? $model->floor_count + 1 : $model->floor_count;
+    //     // dd($j_default);
+    //     for ($i = 1; $i <= $model->entrance_count; $i++) {
+    //         for ($j = $j_default; $j >= $i_default; $j--) {
+    //             $f_j = $j;
+    //             // echo $j . '>' . $model->floor_count . '<br>';
+    //             if ($j > $model->floor_count)
+    //                 $f_j = translate('attic');
 
-                if ($j == 0)
-                    $f_j = translate('basement');
+    //             if ($j == 0)
+    //                 $f_j = translate('basement');
 
-                $arr['list'][$i]['list'][$f_j] = [];
-                $arr['entrance_count'][$f_j] = $f_j;
-            }
-        }
+    //             $arr['list'][$i]['list'][$f_j] = [];
+    //             $arr['entrance_count'][$f_j] = $f_j;
+    //         }
+    //     }
 
-        // for ($i = 1; $i <= $model->entrance_count; $i++)
-        //     for ($j = $model->floor_count; $j >= 1; $j--)
-        //         $arr['list'][$i]['list'][$j] = [];
+    //     // for ($i = 1; $i <= $model->entrance_count; $i++)
+    //     //     for ($j = $model->floor_count; $j >= 1; $j--)
+    //     //         $arr['list'][$i]['list'][$j] = [];
 
-        $count_all = 0;
-        $count_bookings = 0;
-        $count_free = 0;
-        $count_solds = 0;
+    //     $count_all = 0;
+    //     $count_bookings = 0;
+    //     $count_free = 0;
+    //     $count_solds = 0;
 
-        $entrance_all = 0;
-        $entrance_bookings = 0;
-        $entrance_free = 0;
-        $entrance_solds = 0;
+    //     $entrance_all = 0;
+    //     $entrance_bookings = 0;
+    //     $entrance_free = 0;
+    //     $entrance_solds = 0;
 
-        $entranceArr = [];
-        $floorArr = [];
-        $n = 0;
+    //     $entranceArr = [];
+    //     $floorArr = [];
+    //     $n = 0;
 
-        $model->entrance_count;
-        $model->floor_count;
-        // $entrance_count = 0;
-        // $floor_count = 0;
-        // pre($flats);
-        foreach ($flats as $val) {
-            $count_all++;
-            if ($val->status == HouseFlat::STATUS_BOOKING)
-                $count_bookings++;
-            else if ($val->status == HouseFlat::STATUS_FREE)
-                $count_free++;
-            else if ($val->status == HouseFlat::STATUS_SOLD)
-                $count_solds++;
+    //     $model->entrance_count;
+    //     $model->floor_count;
+    //     // $entrance_count = 0;
+    //     // $floor_count = 0;
+    //     // pre($flats);
+    //     foreach ($flats as $val) {
+    //         $count_all++;
+    //         if ($val->status == HouseFlat::STATUS_BOOKING)
+    //             $count_bookings++;
+    //         else if ($val->status == HouseFlat::STATUS_FREE)
+    //             $count_free++;
+    //         else if ($val->status == HouseFlat::STATUS_SOLD)
+    //             $count_solds++;
 
-            if (!in_array($val->entrance, $entranceArr)) {
-                $entranceArr[] = $val->entrance;
-                $entrance_all = 0;
-                $entrance_bookings = 0;
-                $entrance_free = 0;
-                $entrance_solds = 0;
-            }
+    //         if (!in_array($val->entrance, $entranceArr)) {
+    //             $entranceArr[] = $val->entrance;
+    //             $entrance_all = 0;
+    //             $entrance_bookings = 0;
+    //             $entrance_free = 0;
+    //             $entrance_solds = 0;
+    //         }
 
-            $entrance_all++;
-            if ($val->status == HouseFlat::STATUS_BOOKING)
-                $entrance_bookings++;
-            else if ($val->status == HouseFlat::STATUS_FREE)
-                $entrance_free++;
-            else if ($val->status == HouseFlat::STATUS_SOLD)
-                $entrance_solds++;
+    //         $entrance_all++;
+    //         if ($val->status == HouseFlat::STATUS_BOOKING)
+    //             $entrance_bookings++;
+    //         else if ($val->status == HouseFlat::STATUS_FREE)
+    //             $entrance_free++;
+    //         else if ($val->status == HouseFlat::STATUS_SOLD)
+    //             $entrance_solds++;
 
-            if (!in_array($val->floor, $floorArr)) {
-                $floorArr[] = $val->floor;
-                $n = 0;
-            }
+    //         if (!in_array($val->floor, $floorArr)) {
+    //             $floorArr[] = $val->floor;
+    //             $n = 0;
+    //         }
 
-            $f_j = $val->floor;
-            if ($val->floor > $model->floor_count)
-                $f_j = translate('attic');
+    //         $f_j = $val->floor;
+    //         if ($val->floor > $model->floor_count)
+    //             $f_j = translate('attic');
 
-            if ($val->floor == 0)
-                $f_j = translate('basement');
+    //         if ($val->floor == 0)
+    //             $f_j = translate('basement');
 
-            $arr['list'][$val->entrance]['entrance_all'] = $entrance_all;
-            $arr['list'][$val->entrance]['entrance_bookings'] = $entrance_bookings;
-            $arr['list'][$val->entrance]['entrance_free'] = $entrance_free;
-            $arr['list'][$val->entrance]['entrance_solds'] = $entrance_solds;
-            $arr['list'][$val->entrance]['entrance'] = $val->entrance;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['id'] = $val->id;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['color_status'] = $val->status;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['number_of_flat'] = $val->number_of_flat;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['areas'] = $val->areas;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['price'] = $val->price;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['contract_number'] = $val->contract_number;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['room_count'] = $val->room_count;
+    //         $arr['list'][$val->entrance]['entrance_all'] = $entrance_all;
+    //         $arr['list'][$val->entrance]['entrance_bookings'] = $entrance_bookings;
+    //         $arr['list'][$val->entrance]['entrance_free'] = $entrance_free;
+    //         $arr['list'][$val->entrance]['entrance_solds'] = $entrance_solds;
+    //         $arr['list'][$val->entrance]['entrance'] = $val->entrance;
+    //         $arr['list'][$val->entrance]['list'][$f_j][$n]['id'] = $val->id;
+    //         $arr['list'][$val->entrance]['list'][$f_j][$n]['color_status'] = $val->status;
+    //         $arr['list'][$val->entrance]['list'][$f_j][$n]['number_of_flat'] = $val->number_of_flat;
+    //         $arr['list'][$val->entrance]['list'][$f_j][$n]['areas'] = $val->areas;
+    //         $arr['list'][$val->entrance]['list'][$f_j][$n]['price'] = $val->price;
+    //         $arr['list'][$val->entrance]['list'][$f_j][$n]['contract_number'] = $val->contract_number;
+    //         $arr['list'][$val->entrance]['list'][$f_j][$n]['room_count'] = $val->room_count;
 
-            $n++;
-        }
+    //         $n++;
+    //     }
 
-        $arr['count_all'] = $count_all;
-        $arr['count_bookings'] = $count_bookings;
-        $arr['count_free'] = $count_free;
-        $arr['count_solds'] = $count_solds;
-        // pre($flats);
+    //     $arr['count_all'] = $count_all;
+    //     $arr['count_bookings'] = $count_bookings;
+    //     $arr['count_free'] = $count_free;
+    //     $arr['count_solds'] = $count_solds;
+    //     // pre($flats);
 
-        $colors = ['', '', ''];
-        if (!empty($statusColors)) {
-            foreach ($statusColors as $value) {
-                $colors[$value->status] = $value->color;
-            }
-        }
-        // pre($colors);
-        // return view('forthebuilder::house.show-more-second', [
-        return view('forthebuilder::house.show-more', [
-            'model' => $model,
-            'flats' => $flats,
-            'arr' => $arr,
-            'colors' => $colors,
-            'status' => '',
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
+    //     $colors = ['', '', ''];
+    //     if (!empty($statusColors)) {
+    //         foreach ($statusColors as $value) {
+    //             $colors[$value->status] = $value->color;
+    //         }
+    //     }
+    //     // pre($colors);
+    //     // return view('forthebuilder::house.show-more-second', [
+    //     return view('forthebuilder::house.show-more', [
+    //         'model' => $model,
+    //         'flats' => $flats,
+    //         'arr' => $arr,
+    //         'colors' => $colors,
+    //         'status' => '',
+    //         'all_notifications' => $this->getNotification()
+    //     ]);
+    // }
 
-    public function showDetails($house_id, $entrance, $flat_id)
-    {
-        $model = House::findOrFail($house_id);
-        $flats = HouseFlat::select('id', 'floor', 'entrance', 'status', 'number_of_flat', 'price', 'areas', 'room_count', 'house_id', 'doc_number', 'ares_price')->where(['house_id' => $model->id, 'entrance' => $entrance])->orderBy('entrance', 'asc')->orderBy('floor', 'desc')->orderBy('number_of_flat', 'asc')->get();
-        $statusColors = StatusColors::select('id', 'color', 'status')->get();
-        $arr = [];
-        // for ($i = 1; $i <= $model->entrance_count; $i++)
-        //     for ($j = $model->floor_count; $j >= 1; $j--)
-        //         $arr['list'][$i]['list'][$j] = [];
+    // public function showDetails($house_id, $entrance, $flat_id)
+    // {
+    //     $model = House::findOrFail($house_id);
+    //     $flats = HouseFlat::select('id', 'floor', 'entrance', 'status', 'number_of_flat', 'price', 'areas', 'room_count', 'house_id', 'doc_number', 'ares_price')->where(['house_id' => $model->id, 'entrance' => $entrance])->orderBy('entrance', 'asc')->orderBy('floor', 'desc')->orderBy('number_of_flat', 'asc')->get();
+    //     $statusColors = StatusColors::select('id', 'color', 'status')->get();
+    //     $arr = [];
+    //     // for ($i = 1; $i <= $model->entrance_count; $i++)
+    //     //     for ($j = $model->floor_count; $j >= 1; $j--)
+    //     //         $arr['list'][$i]['list'][$j] = [];
 
-        $count_all = 0;
-        $count_bookings = 0;
-        $count_free = 0;
-        $count_solds = 0;
+    //     $count_all = 0;
+    //     $count_bookings = 0;
+    //     $count_free = 0;
+    //     $count_solds = 0;
 
-        $entrance_all = 0;
-        $entrance_bookings = 0;
-        $entrance_free = 0;
-        $entrance_solds = 0;
+    //     $entrance_all = 0;
+    //     $entrance_bookings = 0;
+    //     $entrance_free = 0;
+    //     $entrance_solds = 0;
 
-        $entranceArr = [];
-        $floorArr = [];
-        $n = 0;
+    //     $entranceArr = [];
+    //     $floorArr = [];
+    //     $n = 0;
 
-        $model->entrance_count;
-        $model->floor_count;
-        // $entrance_count = 0;
-        // $floor_count = 0;
-        // pre($flats);
-        foreach ($flats as $val) {
-            $count_all++;
-            if ($val->status == HouseFlat::STATUS_BOOKING)
-                $count_bookings++;
-            else if ($val->status == HouseFlat::STATUS_FREE)
-                $count_free++;
-            else if ($val->status == HouseFlat::STATUS_SOLD)
-                $count_solds++;
+    //     $model->entrance_count;
+    //     $model->floor_count;
+    //     // $entrance_count = 0;
+    //     // $floor_count = 0;
+    //     // pre($flats);
+    //     foreach ($flats as $val) {
+    //         $count_all++;
+    //         if ($val->status == HouseFlat::STATUS_BOOKING)
+    //             $count_bookings++;
+    //         else if ($val->status == HouseFlat::STATUS_FREE)
+    //             $count_free++;
+    //         else if ($val->status == HouseFlat::STATUS_SOLD)
+    //             $count_solds++;
 
-            if (!in_array($val->entrance, $entranceArr)) {
-                $entranceArr[] = $val->entrance;
-                $entrance_all = 0;
-                $entrance_bookings = 0;
-                $entrance_free = 0;
-                $entrance_solds = 0;
-            }
+    //         if (!in_array($val->entrance, $entranceArr)) {
+    //             $entranceArr[] = $val->entrance;
+    //             $entrance_all = 0;
+    //             $entrance_bookings = 0;
+    //             $entrance_free = 0;
+    //             $entrance_solds = 0;
+    //         }
 
-            $entrance_all++;
-            if ($val->status == HouseFlat::STATUS_BOOKING)
-                $entrance_bookings++;
-            else if ($val->status == HouseFlat::STATUS_FREE)
-                $entrance_free++;
-            else if ($val->status == HouseFlat::STATUS_SOLD)
-                $entrance_solds++;
+    //         $entrance_all++;
+    //         if ($val->status == HouseFlat::STATUS_BOOKING)
+    //             $entrance_bookings++;
+    //         else if ($val->status == HouseFlat::STATUS_FREE)
+    //             $entrance_free++;
+    //         else if ($val->status == HouseFlat::STATUS_SOLD)
+    //             $entrance_solds++;
 
-            if (!in_array($val->floor, $floorArr)) {
-                $floorArr[] = $val->floor;
-                $n = 0;
-            }
+    //         if (!in_array($val->floor, $floorArr)) {
+    //             $floorArr[] = $val->floor;
+    //             $n = 0;
+    //         }
 
-            $f_j = $val->floor;
-            if ($val->floor > $model->floor_count)
-                $f_j = translate('attic');
+    //         $f_j = $val->floor;
+    //         if ($val->floor > $model->floor_count)
+    //             $f_j = translate('attic');
 
-            if ($val->floor == 0)
-                $f_j = translate('basement');
+    //         if ($val->floor == 0)
+    //             $f_j = translate('basement');
 
-            $areas = json_decode($val->areas);
-            // pre($val->ares_price);
-            $arr['entrance_all'] = $entrance_all;
-            $arr['entrance_bookings'] = $entrance_bookings;
-            $arr['entrance_free'] = $entrance_free;
-            $arr['entrance_solds'] = $entrance_solds;
-            $arr['entrance'] = $val->entrance;
-            $arr['list'][$f_j][$n]['id'] = $val->id;
-            $arr['list'][$f_j][$n]['house_id'] = $val->house_id;
-            $arr['list'][$f_j][$n]['house_house_name'] = $model->name;
-            $arr['list'][$f_j][$n]['doc_number'] = $val->doc_number;
-            $arr['list'][$f_j][$n]['color_status'] = $val->status;
-            $arr['list'][$f_j][$n]['number_of_flat'] = $val->number_of_flat;
-            $arr['list'][$f_j][$n]['areas'] = $areas->total;
-            $arr['list'][$f_j][$n]['price'] = $val->price;
-            $arr['list'][$f_j][$n]['contract_number'] = $val->contract_number;
-            $arr['list'][$f_j][$n]['room_count'] = $val->room_count;
-            $arr['list'][$f_j][$n]['ares_price'] = $val->ares_price;
-            $arr['list'][$f_j][$n]['client'] = '';
-            if ($val->status == Constants::STATUS_BOOKING) {
-                $arr['list'][$f_j][$n]['client'] = (isset($val->booking->clients)) ? $val->booking->clients->last_name . ' ' . $val->booking->clients->first_name . ' ' . $val->booking->clients->middle_name : '';
-            } else if ($val->status == Constants::STATUS_SOLD) {
-                $arr['list'][$f_j][$n]['client'] = (isset($val->deal->client)) ? $val->deal->client->last_name . ' ' . $val->deal->client->first_name . ' ' . $val->deal->client->middle_name : '';
-            }
-            $arr['list'][$f_j][$n]['floor'] = $val->floor;
-            $arr['list'][$f_j][$n]['doc'] = $val->image ? asset('/uploads/house-flat/' . $val->house_id . '/m_' . $val->image->guid) : asset('/backend-assets/forthebuilders/images/a6d5ae15f8f52bd6b9db53be7746c650 1.png');
+    //         $areas = json_decode($val->areas);
+    //         // pre($val->ares_price);
+    //         $arr['entrance_all'] = $entrance_all;
+    //         $arr['entrance_bookings'] = $entrance_bookings;
+    //         $arr['entrance_free'] = $entrance_free;
+    //         $arr['entrance_solds'] = $entrance_solds;
+    //         $arr['entrance'] = $val->entrance;
+    //         $arr['list'][$f_j][$n]['id'] = $val->id;
+    //         $arr['list'][$f_j][$n]['house_id'] = $val->house_id;
+    //         $arr['list'][$f_j][$n]['house_house_name'] = $model->name;
+    //         $arr['list'][$f_j][$n]['doc_number'] = $val->doc_number;
+    //         $arr['list'][$f_j][$n]['color_status'] = $val->status;
+    //         $arr['list'][$f_j][$n]['number_of_flat'] = $val->number_of_flat;
+    //         $arr['list'][$f_j][$n]['areas'] = $areas->total;
+    //         $arr['list'][$f_j][$n]['price'] = $val->price;
+    //         $arr['list'][$f_j][$n]['contract_number'] = $val->contract_number;
+    //         $arr['list'][$f_j][$n]['room_count'] = $val->room_count;
+    //         $arr['list'][$f_j][$n]['ares_price'] = $val->ares_price;
+    //         $arr['list'][$f_j][$n]['client'] = '';
+    //         if ($val->status == Constants::STATUS_BOOKING) {
+    //             $arr['list'][$f_j][$n]['client'] = (isset($val->booking->clients)) ? $val->booking->clients->last_name . ' ' . $val->booking->clients->first_name . ' ' . $val->booking->clients->middle_name : '';
+    //         } else if ($val->status == Constants::STATUS_SOLD) {
+    //             $arr['list'][$f_j][$n]['client'] = (isset($val->deal->client)) ? $val->deal->client->last_name . ' ' . $val->deal->client->first_name . ' ' . $val->deal->client->middle_name : '';
+    //         }
+    //         $arr['list'][$f_j][$n]['floor'] = $val->floor;
+    //         $arr['list'][$f_j][$n]['doc'] = $val->image ? asset('/uploads/house-flat/' . $val->house_id . '/m_' . $val->image->guid) : asset('/backend-assets/forthebuilders/images/a6d5ae15f8f52bd6b9db53be7746c650 1.png');
 
-            // [$val->entrance]
+    //         // [$val->entrance]
 
-            $n++;
-        }
+    //         $n++;
+    //     }
 
-        $arr['count_all'] = $count_all;
-        $arr['count_bookings'] = $count_bookings;
-        $arr['count_free'] = $count_free;
-        $arr['count_solds'] = $count_solds;
-        $colors = [];
-        if (!empty($statusColors))
-            foreach ($statusColors as $value)
-                $colors[$value->status] = $value->color;
+    //     $arr['count_all'] = $count_all;
+    //     $arr['count_bookings'] = $count_bookings;
+    //     $arr['count_free'] = $count_free;
+    //     $arr['count_solds'] = $count_solds;
+    //     $colors = [];
+    //     if (!empty($statusColors))
+    //         foreach ($statusColors as $value)
+    //             $colors[$value->status] = $value->color;
 
-        // pre($arr);
-        return view('forthebuilder::house.show-details', [
-            'model' => $model,
-            'flats' => $flats,
-            'arr' => $arr,
-            'colors' => $colors,
-            'status' => '',
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
+    //     // pre($arr);
+    //     return view('forthebuilder::house.show-details', [
+    //         'model' => $model,
+    //         'flats' => $flats,
+    //         'arr' => $arr,
+    //         'colors' => $colors,
+    //         'status' => '',
+    //         'all_notifications' => $this->getNotification()
+    //     ]);
+    // }
 
     public function basketShow($id)
     {
