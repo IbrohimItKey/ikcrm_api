@@ -5,6 +5,7 @@ use App\Http\Controllers\DealController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\HouseController;
 use App\Http\Controllers\ForTheBuilderController;
+use App\Http\Controllers\BookingController;
 use App\Models\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -24,7 +25,7 @@ Route::post('/register', [\App\Http\Controllers\AuthController::class, 'Register
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'Login']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
-    
+
     Route::get('/dashboard', [ForTheBuilderController::class, 'index']);
 
     Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'Logout']);
@@ -38,5 +39,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::group(['prefix' => 'deal'], function () {
         Route::get('/index', [DealController::class, 'index']);
         Route::get('/update-status', [DealController::class, 'updateStatus']);
+    });
+    Route::group(['prefix' => 'booking'], function () {
+        Route::get('/index', [BookingController::class, 'index']);
+        // Route::get('/update-status', [BookingController::class, 'updateStatus']);
     });
 });
