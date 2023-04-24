@@ -23,7 +23,7 @@ Route::post('/register', [\App\Http\Controllers\AuthController::class, 'Register
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'Login']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
-    Route::get('/logout', [\App\Http\Controllers\AuthController::class, 'Logout']);
+    Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'Logout']);
     Route::get('/house', [\App\Http\Controllers\HouseController::class, 'index']);
     Route::group(['prefix' => 'clients'], function () {
         Route::get('/index', [ClientsController::class, 'Index']);
