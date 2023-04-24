@@ -135,7 +135,7 @@ class AuthController extends Controller
           'email'=>'required|string',
           'password'=>'required|string'
        ]);
-       $user = User::where('email', $fields['email'])->first();
+       $user = User::select('id', 'first_name', 'last_name', 'middle_name', 'avatar AS image', 'password')->where('email', $fields['email'])->first();
        if(!$user||!Hash::check($fields['password'], $user->password)){
            return response(['message'=>'bad creds', 401]);
        }
