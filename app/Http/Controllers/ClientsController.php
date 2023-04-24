@@ -131,17 +131,17 @@ class ClientsController extends Controller
     {
         $models = Clients::orderBy('id', 'desc')->get(); //->paginate(config('params.pagination'));
 
-        // $defaultAction = [
-        //     Constants::FIRST_CONTACT => translate('First contact'),
-        //     Constants::NEGOTIATION => translate('Negotiation'),
-        //     Constants::MAKE_DEAL => translate('Making a deal'),
-        // ];
+         $defaultAction = [
+             Constants::FIRST_CONTACT => translate('First contact'),
+             Constants::NEGOTIATION => translate('Negotiation'),
+             Constants::MAKE_DEAL => translate('Making a deal'),
+         ];
         return view('forthebuilder::clients.all-clients', [
             'models' => $models,
             'active' => Constants::CLIENT_ACTIVE,
             'archive' => Constants::CLIENT_DELETED,
-            'all_notifications' => $this->getNotification()
-            // 'defaultAction' => $defaultAction,
+            'all_notifications' => $this->getNotification(),
+             'defaultAction' => $defaultAction,
         ]);
     }
 
@@ -149,17 +149,60 @@ class ClientsController extends Controller
     {
         $user = Auth::user();
         $models = Task::where('deleted_at', NULL)->get();
-        $my_models = Task::where('performer_id', $user->id)->where('deleted_at', NULL)->get();
-        $users = User::all();
-
+        foreach ($models as $model){
+            $tasks[] = [
+                'id' => $model->id,
+                'href' => route('clients.show', [$model->deal->client->id, '0', '0']),
+                'first_name' => $model->performer->first_name,
+                'last_name' => $model->performer->last_name,
+                'middle_name' => $model->performer->middle_name,
+                'created_at' => $model->created_at,
+                'email' => $model->performer->email,
+                'task_date' => $model->task_date,
+                'type' => $model->type,
+                'user_first_name' => $model->user->first_name??'',
+                'user_last_name' => $model->user->last_name??'',
+            ];
+        }
+//        $my_models = Task::where('performer_id', $user->id)->where('deleted_at', NULL)->get();
+//        foreach ($my_models as $my_model){
+//            $my_tasks[] = [
+//                'id' => $my_model->id,
+//                'href' => route('clients.show', [$my_model->deal->client->id, '0', '0']),
+//                'first_name' => $my_model->performer->first_name,
+//                'last_name' => $my_model->performer->last_name,
+//                'middle_name' => $my_model->performer->middle_name,
+//                'created_at' => $my_model->created_at,
+//                'email' => $my_model->performer->email,
+//                'task_date' => $my_model->task_date,
+//                'type' => $my_model->type,
+//                'user_first_name' => $my_model->user->first_name??'',
+//                'user_last_name' => $my_model->user->last_name??'',
+//            ];
+//        }
+        $users = User::select('id', 'first_name')->get();
+        $this_user_id = $user->id;
         $deals = Deal::where('status', 1)->get();
-        return view('forthebuilder::clients.calendar', [
-            'models' => $models,
+        foreach ($deals as $deal){
+            $deal_[] = [
+                'id' => $deal->id,
+                'first_name' => $deal->client->first_name,
+                'last_name' => $deal->client->last_name,
+                'middle_name' => $deal->client->middle_name,
+            ];
+        }
+        $data = [
+            'tasks' => $tasks,
+//            'my_tasks' => $my_tasks,
             'users' => $users,
-            'deals' => $deals,
-            'my_models' => $my_models,
-            'all_notifications' => $this->getNotification()
-        ]);
+            'deals' => $deal_,
+        ];
+        $response = [
+            "status" => true,
+            "message" => "success",
+            "data"=>$data
+        ];
+        return response($response);
     }
 
     public function indexLeadListNew()

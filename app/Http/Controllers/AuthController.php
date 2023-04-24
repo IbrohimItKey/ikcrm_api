@@ -144,6 +144,7 @@ class AuthController extends Controller
            'status'=>true,
            'message'=>'Success',
            'token'=>$token,
+           'token_expired_date'=>date('Y-m-d H:i:s', strtotime('+24 hours')),
            'user'=>$user
        ];
        return response($response, 201);
