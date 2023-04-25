@@ -37,13 +37,28 @@ class InstallmentPlanController extends Controller
     {
         // $models = Deal::where('installment_plan_id', '!=', NULL);
         $models = Deal::with('house_flat', 'user', 'client')->where('installment_plan_id', '!=', NULL)
-            ->paginate(config('params.pagination'));
+//            ->paginate(config('params.pagination'));
+        ->get();
         // pre($models[0]->plan);
+        $installment_plans = [];
+        foreach ($models as $model){
+            $installment_plans[] = [
+                'id'=>$model->id,
+                'client_first_name'=>$model->client->first_name,
+                'client_last_name'=>$model->client->last_name,
+                'client_middle_name'=>$model->client->middle_name,
+                'agreement_number'=>$model->agreement_number,
+                'price_sell'=>number_format($model->price_sell, 2),
+                'period'=>$model->installmentPlan->period ?? 0,
+            ];
+        }
+        $response = [
+            "status" => true,
+            "message" => "success",
+            "data" => $installment_plans
+        ];
+        return response($response);
 
-        return view('forthebuilder::installment-plan.index', [
-            'models' => $models,
-            'all_notifications' => $this->getNotification()
-        ]);
     }
 
     /**

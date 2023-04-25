@@ -140,10 +140,13 @@ class AuthController extends Controller
            return response(['message'=>'bad creds', 401]);
        }
        $token = $user->createToken('myapptoken')->plainTextToken;
+       $user->token = $token;
+       $user->save();
        $response = [
            'status'=>true,
            'message'=>'Success',
            'token'=>$token,
+           'token_expired_date'=>date('Y-m-d H:i:s', strtotime('+24 hours')),
            'user'=>$user
        ];
        return response($response, 201);

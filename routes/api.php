@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\ClientsController;
 use App\Http\Controllers\DealController;
+use App\Http\Controllers\InstallmentPlanController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\HouseController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForTheBuilderController;
 use App\Http\Controllers\BookingController;
 use App\Models\House;
@@ -21,20 +23,28 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('/register', [\App\Http\Controllers\AuthController::class, 'Register']);
-Route::post('/login', [\App\Http\Controllers\AuthController::class, 'Login']);
+Route::post('/register', [AuthController::class, 'Register']);
+Route::post('/login', [AuthController::class, 'Login']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
+    Route::post('/logout', [AuthController::class, 'Logout']);
+    Route::get('/house', [HouseController::class, 'index']);
 
     Route::get('/dashboard', [ForTheBuilderController::class, 'index']);
 
-    Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'Logout']);
-    Route::get('/house', [\App\Http\Controllers\HouseController::class, 'index']);
     Route::group(['prefix' => 'clients'], function () {
         Route::get('/index', [ClientsController::class, 'Index']);
+        Route::get('/all-clients', [ClientsController::class, 'allClients']);
+        Route::post('/insert', [ClientsController::class, 'insert']);
+        Route::get('/show', [ClientsController::class, 'show'])->name('clients.show');
     });
+    Route::get('/calendar', [ClientsController::class, 'calendar']);
     Route::group(['prefix' => 'task'], function () {
         Route::get('/index', [TaskController::class, 'index']);
+    });
+    Route::group(['prefix' => 'installment-plan'], function () {
+        Route::get('/index', [InstallmentPlanController::class, 'index']);
+        Route::get('/show', [InstallmentPlanController::class, 'show']);
     });
     Route::group(['prefix' => 'deal'], function () {
         Route::get('/index', [DealController::class, 'index']);
