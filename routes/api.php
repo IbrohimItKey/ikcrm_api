@@ -42,6 +42,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::group(['prefix' => 'installment-plan'], function () {
         Route::get('/index', [InstallmentPlanController::class, 'index']);
+        Route::get('/show', [InstallmentPlanController::class, 'show']);
     });
     Route::group(['prefix' => 'deal'], function () {
         Route::get('/index', [DealController::class, 'index']);

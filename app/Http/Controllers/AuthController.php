@@ -140,6 +140,8 @@ class AuthController extends Controller
            return response(['message'=>'bad creds', 401]);
        }
        $token = $user->createToken('myapptoken')->plainTextToken;
+       $user->token = $token;
+       $user->save();
        $response = [
            'status'=>true,
            'message'=>'Success',
