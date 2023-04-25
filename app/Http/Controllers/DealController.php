@@ -50,58 +50,93 @@ class DealController extends Controller
 
     public function index()
     {
-
-
+        date_default_timezone_set("Asia/Tashkent");
         $models = Deal::with('house_flat', 'user')->where('status', Constants::ACTIVE)
             // ->select('id', 'user_id', 'house_flat_id', 'price_sell', 'date_deal', 'description')
             ->orderBy('type', 'asc')->get(); //->paginate(config('params.pagination'));
 
         $arr = [
-            translate('First contact') => ['class' => 'lidiRed'],
-            translate('Negotiation') => ['class' => 'lidiYellow'],
-            translate('Making a deal') => ['class' => 'lidiGreen'],
+            'First contact' => ['class' => '#FF9D9D'],
+            'Negotiation' => ['class' => '#F7FF9C'],
+            'Making a deal' => ['class' => 'lidiGreen'],
         ];
         if (!empty($models)) {
             $i = 0;
+//            $negotiation = [];
+//            $making_a_deal = [];
+//            $first_contact = [];
             foreach ($models as $key => $value) {
                 $keyArr = '';
                 $class = '';
-                switch ($value->type) {
-                    case Constants::FIRST_CONTACT:
-                        $keyArr = translate('First contact');
-                        $class = 'lidiRed';
-                        break;
-                    case Constants::NEGOTIATION:
-                        $keyArr = translate('Negotiation');
-                        $class = 'lidiYellow';
-                        break;
-                    case Constants::MAKE_DEAL:
-                        $keyArr = translate('Making a deal');
-                        $class = 'lidiGreen';
-                        break;
-                    default:
-                        $keyArr = translate('First contact');
-                        $class = 'lidiRed';
-                        break;
-                }
-
-                if ($value->client) {
-                    $arr[$keyArr]['id'] = $value->id;
-                    $arr[$keyArr]['class'] = $class;
-                    $arr[$keyArr]['list'][$i]['responsible'] = (isset($value->user)) ? $value->user->last_name . ' ' . $value->user->first_name : '';
-                    $arr[$keyArr]['list'][$i]['client'] = (isset($value->client)) ? $value->client->last_name . ' ' . $value->client->first_name . ' ' . $value->client->middle_name : '';
-                    $arr[$keyArr]['list'][$i]['client_id'] = $value->client->id ?? 0;
-                    $arr[$keyArr]['list'][$i]['day'] = ($value->date_deal) ? date('d.m.Y', strtotime($value->date_deal)) : '';
-                    $arr[$keyArr]['list'][$i]['time'] = ($value->date_deal) ? date('H:i', strtotime($value->date_deal)) : '';
-                    $i++;
+                if ($value->client && $value->user) {
+                    switch ($value->type) {
+                        case Constants::NEGOTIATION:
+                            $negotiation['title'] = 'Negotiation';
+                            $negotiation['class'] = 'lidiYellow';
+                            $negotiation['id'] = $value->id;
+                            $negotiation['list'][] = [
+                                "responsible_last_name" => $value->user->last_name,
+                                "responsible_first_name" => $value->user->first_name,
+                                "responsible_middle_name" => $value->user->middle_name,
+                                "client_last_name" => $value->client->last_name,
+                                "client_first_name" => $value->client->first_name,
+                                "client_middle_name" => $value->client->middle_name,
+                                "client_id" => $value->client->id ?? 0,
+                                "day" => ($value->date_deal) ? date('d.m.Y', strtotime($value->date_deal)) : '',
+                                "time" => ($value->date_deal) ? date('H:i', strtotime($value->date_deal)) : ''
+                            ];
+                            break;
+                        case Constants::MAKE_DEAL:
+                            $making_a_deal['title'] = 'Making a deal';
+                            $making_a_deal['class'] = 'lidiGreen';
+                            $making_a_deal['id'] = $value->id;
+                            $making_a_deal['list'][] = [
+                                "responsible_last_name" => $value->user->last_name,
+                                "responsible_first_name" => $value->user->first_name,
+                                "responsible_middle_name" => $value->user->middle_name,
+                                "client_last_name" => $value->client->last_name,
+                                "client_first_name" => $value->client->first_name,
+                                "client_middle_name" => $value->client->middle_name,
+                                "client_id" => $value->client->id ?? 0,
+                                "day" => ($value->date_deal) ? date('d.m.Y', strtotime($value->date_deal)) : '',
+                                "time" => ($value->date_deal) ? date('H:i', strtotime($value->date_deal)) : ''
+                            ];
+                            break;
+                        default:
+                            $first_contact['title'] = 'First contact';
+                            $first_contact['class'] = 'lidiRed';
+                            $first_contact['id'] = $value->id;
+                            $first_contact['list'][] = [
+                                "responsible_last_name" => $value->user->last_name,
+                                "responsible_first_name" => $value->user->first_name,
+                                "responsible_middle_name" => $value->user->middle_name,
+                                "client_last_name" => $value->client->last_name,
+                                "client_first_name" => $value->client->first_name,
+                                "client_middle_name" => $value->client->middle_name,
+                                "client_id" => $value->client->id ?? 0,
+                                "day" => ($value->date_deal) ? date('d.m.Y', strtotime($value->date_deal)) : '',
+                                "time" => ($value->date_deal) ? date('H:i', strtotime($value->date_deal)) : ''
+                            ];
+                            break;
+                    }
+//                        $arr[$keyArr]['id'] = $value->id;
+//                        $arr[$keyArr]['class'] = $class;
+//                        $arr[$keyArr]['list'][$i]['responsible'] = (isset($value->user)) ? $value->user->last_name . ' ' . $value->user->first_name : '';
+//                        $arr[$keyArr]['list'][$i]['client'] = (isset($value->client)) ? $value->client->last_name . ' ' . $value->client->first_name . ' ' . $value->client->middle_name : '';
+//                        $arr[$keyArr]['list'][$i]['client_id'] = $value->client->id ?? 0;
+//                        $arr[$keyArr]['list'][$i]['day'] = ($value->date_deal) ? date('d.m.Y', strtotime($value->date_deal)) : '';
+//                        $arr[$keyArr]['list'][$i]['time'] = ($value->date_deal) ? date('H:i', strtotime($value->date_deal)) : '';
+//                        $i++;
                 }
             }
         }
-
-        return view('forthebuilder::deal.index', [
-            'arr' => $arr,
-            'all_notifications' => $this->getNotification()
-        ]);
+        $arr = [$first_contact??(Object)[], $making_a_deal??(Object)[], $negotiation??''];
+        $response = [
+            'status'=>true,
+            'message'=>'success',
+            'data'=> $arr
+        ];
+       return response($response);
     }
 
     public function getFlat(Request $request)
@@ -324,6 +359,49 @@ class DealController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+    public function updateStatus(Request $request, $id)
+    {
+        $model = Deal::find($id);
+        switch ($model->type) {
+            case 1:
+                $old_type = 'First contact';
+                break;
+            case 2:
+                $old_type = 'Negotiation';
+                break;
+            case 3:
+                $old_type = 'Making a deal';
+                break;
+        }
+        switch ($request->type) {
+            case 1:
+                $new_type = 'First contact';
+                break;
+            case 2:
+                $new_type = 'Negotiation';
+                break;
+            case 3:
+                $new_type = 'Making a deal';
+                break;
+        }
+        $model->type = $request->type;
+        if ($model->history == NULL) {
+            $model->history = json_encode([['date' => date('Y-m-d H:i:s'), 'user' => $user->first_name, 'user_id' => $user->id, 'user_photo' => $user->avatar, 'new_type' => $new_type, 'old_type' => $old_type]]);
+        } else {
+            $old_history = json_decode($model->history);
+            $old_history[] = ['date' => date('Y-m-d H:i:s'), 'user' => $user->first_name, 'user_id' => $user->id,  'user_photo' => $user->avatar, 'new_type' => $new_type, 'old_type' => $old_type];
+            $model->history = json_encode($old_history);
+        }
+        $model->save();
+        $response = [
+            "status"=>true,
+            "message"=>"success"
+        ];
+        return response($response);
+
+    }
+
     public function edit($id)
     {
         $houses = House::all();

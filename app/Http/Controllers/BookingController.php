@@ -39,12 +39,12 @@ class BookingController extends Controller
      * @return Renderable
      */
 
-    public function getNotification(){
-        $notification = ['Booking', 'BookingPrepayment'];
-        $all_task = Notification_::where('type', 'Task')->where(['read_at' => NULL,  'user_id' => Auth::user()->id])->orderBy('created_at', 'desc')->get();
-        $all_booking = Notification_::whereIn('type', $notification)->where('read_at', NULL)->orderBy('created_at', 'desc')->get();
-        return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
-    }
+    // public function getNotification(){
+    //     $notification = ['Booking', 'BookingPrepayment'];
+    //     $all_task = Notification_::where('type', 'Task')->where(['read_at' => NULL,  'user_id' => Auth::user()->id])->orderBy('created_at', 'desc')->get();
+    //     $all_booking = Notification_::whereIn('type', $notification)->where('read_at', NULL)->orderBy('created_at', 'desc')->get();
+    //     return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
+    // }
 
     public function index()
     {
@@ -68,36 +68,45 @@ class BookingController extends Controller
         }
         $list = $this->paginate($list, 10);
         $list->path('');
+
+
+        $response = [
+            'status' => true,
+            'message' => 'success',
+            'data' => $list
+        ];
+        return  response($response);
+
         // dd($list);
 
         // event(new NotificationEvent('hello world!'));
 
-        date_default_timezone_set("Asia/Tashkent");
-        return view('forthebuilder::booking.index', ['all_notifications' => $this->getNotification()])->with(['models' => $list]);
+        // date_default_timezone_set("Asia/Tashkent");
+        // return view('forthebuilder::booking.index', ['all_notifications' => $this->getNotification()])->with(['models' => $list]);
     }
-    public function bookingApi()
-    {
-        $models = Booking::all();
-        $response = [];
-        if (!empty($models)) {
-            foreach ($models as $model) {
-                $expire_date = json_decode($model->expire_dates);
-                $response[] = [
-                    'id' => $model->id,
-                    'first_name' => $model->clients->first_name,
-                    'last_name' => $model->clients->last_name,
-                    'is_notify' => $model->notification->is_notify ?? NULL,
-                    'is_notify_before' => $model->notification->is_notify_before ?? NULL,
-                    'expire_dates' => strtotime(end($expire_date)->date),
-                    'notification_date' => strtotime($model->notification_date),
-                ];
-            }
-        } else {
-            $response[] = [];
-        }
+    // public function bookingApi()
+    // {
+    //     $models = Booking::all();
+    //     $response = [];
+    //     if (!empty($models)) {
+    //         foreach ($models as $model) {
+    //             $expire_date = json_decode($model->expire_dates);
+    //             $response[] = [
+    //                 'id' => $model->id,
+    //                 'first_name' => $model->clients->first_name,
+    //                 'last_name' => $model->clients->last_name,
+    //                 'is_notify' => $model->notification->is_notify ?? NULL,
+    //                 'is_notify_before' => $model->notification->is_notify_before ?? NULL,
+    //                 'expire_dates' => strtotime(end($expire_date)->date),
+    //                 'notification_date' => strtotime($model->notification_date),
+    //             ];
+    //         }
+    //     } else {
+    //         $response[] = [];
+    //     }
 
-        return response()->json($response);
-    }
+    //     return response()->json($response);
+    // }
 
     public function TheDayBeforeNotification($id)
     {
