@@ -54,6 +54,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/index', [BookingController::class, 'index']);
         Route::get('/show', [BookingController::class, 'show']);
         Route::post('/insert', [BookingController::class, 'store']);
+        Route::post('/show/status/update', [BookingController::class, 'statusUpdate']);
+        Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
 
     });
 });

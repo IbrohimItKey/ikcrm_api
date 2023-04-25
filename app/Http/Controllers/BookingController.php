@@ -318,11 +318,21 @@ class BookingController extends Controller
             // dd(json_encode($encode));
 
         $booking->expire_dates=json_encode($encode);
+        $booking->prepayment=$request->prepayment_summa;
         $booking->notification_date = Carbon::parse($datetime)->addDays(-1);
+        $booking->save();
+
+        return response([
+            'status' => true,
+            'message' => 'success',
+        ]);
+
+
+
 
         // return $booking->notification_date;
-        $booking->save();
-        return redirect()->route('forthebuilder.booking.index')->with('success', __('locale.Prepayment has been added'));
+       
+        // return redirect()->route('forthebuilder.booking.index')->with('success', __('locale.Prepayment has been added'));
     }
 
     public function extend($booking_id, $notification_id)
@@ -559,9 +569,14 @@ class BookingController extends Controller
         $house_flat->update([
             'status' => $model->status
         ]);
-        // return $house_flat;
 
-        return 'true';
+        return response([
+            'status' => true,
+            'message' => 'success',
+       
+        ]);
+
+        // return 'true';
         // return redirect()->route('forthebuilder.booking.index')->with('warning', __('locale.Prepayment has been deleted'));
     }
 
