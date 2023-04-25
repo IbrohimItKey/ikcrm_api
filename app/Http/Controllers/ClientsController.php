@@ -100,24 +100,38 @@ class ClientsController extends Controller
      */
     public function Index()
     {
-        // $models = Deal::orderBy('id', 'desc')->paginate(config('params.pagination'));
-        $models = Deal::with('house_flat', 'user')
-            // ->where('status', Constants::ACTIVE)
-            // ->select('id', 'user_id', 'house_flat_id', 'price_sell', 'date_deal', 'description')
+        $models = Deal::with('house', 'client')
             ->orderBy('type', 'asc')->get(); //->paginate(config('params.pagination'));
 
-//        $defaultAction = [
-//            Constants::FIRST_CONTACT => translate('First contact'),
-//            Constants::NEGOTIATION => translate('Negotiation'),
-//            Constants::MAKE_DEAL => translate('Making a deal'),
-//        ];
+        $defaultAction = [
+            Constants::FIRST_CONTACT => 'First contact',
+            Constants::NEGOTIATION => 'Negotiation',
+            Constants::MAKE_DEAL => 'Making a deal',
+        ];
+
+        $arr = [];
+        if (!empty($models)) {
+            $i = 0;
+            foreach ($models as $value) {
+                if ($value->client) {
+                    $arr[$i]['id'] = $value->id;
+                    $arr[$i]['last_name'] = $value->client->last_name ?? '';
+                    $arr[$i]['first_name'] = $value->client->first_name ?? '';
+                    $arr[$i]['middle_name'] = $value->client->middle_name ?? '';
+                    $arr[$i]['deal_object'] = $value->house->name ?? '';
+                    $arr[$i]['sum'] = $value->price_sell;
+                    $arr[$i]['status'] = $value->tasks ? $value->tasks->title : $defaultAction[$value->type];
+                    $i++;
+                }
+            }
+        }
+
         $response = [
-            'status'=>'success',
-            'data'=>[
-                'models' => $models,
-//                'defaultAction' => $defaultAction,
-                'all_notifications' => $this->getNotification()
-            ]
+            'status' => true,
+            'message' => 'success',
+            "pagination" => false,
+            "pagination_count" => 0,
+            'data' => $arr,
         ];
         // pre($defaultAction);
         return response($response);
@@ -131,18 +145,105 @@ class ClientsController extends Controller
     {
         $models = Clients::orderBy('id', 'desc')->get(); //->paginate(config('params.pagination'));
 
-        // $defaultAction = [
-        //     Constants::FIRST_CONTACT => translate('First contact'),
-        //     Constants::NEGOTIATION => translate('Negotiation'),
-        //     Constants::MAKE_DEAL => translate('Making a deal'),
-        // ];
-        return view('forthebuilder::clients.all-clients', [
-            'models' => $models,
-            'active' => Constants::CLIENT_ACTIVE,
-            'archive' => Constants::CLIENT_DELETED,
-            'all_notifications' => $this->getNotification()
-            // 'defaultAction' => $defaultAction,
-        ]);
+        $arr = [];
+        if (!empty($models)) {
+            $i = 0;
+            foreach ($models as $value) {
+                $arr[$i]['id'] = $value->id;
+                $arr[$i]['last_name'] = $value->last_name ?? '';
+                $arr[$i]['first_name'] = $value->first_name ?? '';
+                $arr[$i]['middle_name'] = $value->middle_name ?? '';
+                $arr[$i]['status'] = ($value->status == Constants::CLIENT_ACTIVE) ? "Aktive" : "Archive";
+                $arr[$i]['last_activ'] = date('d.m.Y H:i', strtotime($value->created_at));
+                $i++;
+            }
+        }
+        $response = [
+            'status' => true,
+            'message' => 'success',
+            "pagination" => false,
+            "pagination_count" => 0,
+            'data' => $arr,
+        ];
+        return response($response);
+        // return view('forthebuilder::clients.all-clients', [
+        //     'models' => $models,
+        //     'active' => Constants::CLIENT_ACTIVE,
+        //     'archive' => Constants::CLIENT_DELETED,
+        //     'all_notifications' => $this->getNotification()
+        //     // 'defaultAction' => $defaultAction,
+        // ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     * @param Request $request
+     * @return Renderable
+     */
+
+    public function insert(ClientsRequest $request)
+    {
+        return $request->header('token');
+        $data = $request->validated();
+
+        $auth_user_id = User::where(['token' => $request->header('token')])->get();
+        return $auth_user_id;
+        $client_id = $data['client_id'];
+        if (isset($data['client_id']) && $data['client_id'] != null && $data['client_id'] != 'null') {
+            $existPersonalInfo = PersonalInformations::where(['client_id' => $data['client_id'], 'series_number' => $data['series_number']])->first();
+            if (isset($existPersonalInfo)) {
+                $existClient = Clients::find($data['client_id']);
+                $existClient->first_name = $data['first_name'];
+                $existClient->last_name = $data['last_name'];
+                $existClient->middle_name = $data['middle_name'];
+                $existClient->phone = $data['phone'];
+                $existClient->additional_phone = $data['additional_phone'];
+                $existClient->email = $data['email'];
+                $existClient->source = $data['source'];
+                $existClient->lead_status = $data['lead_status'];
+                $existClient->save();
+                $client_id = $existClient->id;
+            }
+        } else {
+            $newClient = new Clients();
+            $newClient->user_id = $auth_user_id;
+            $newClient->first_name = $data['first_name'];
+            $newClient->last_name = $data['last_name'];
+            $newClient->middle_name = $data['middle_name'];
+            $newClient->phone = $data['phone'];
+            $newClient->additional_phone = $data['additional_phone'];
+            $newClient->email = $data['email'];
+            $newClient->source = $data['source'];
+            $newClient->status = Constants::CLIENT_ACTIVE;
+            $newClient->save();
+
+            $client_id = $newClient->id;
+            if (isset($data['series_number'])) {
+                $newPersonalInfo = new PersonalInformations();
+                $newPersonalInfo->client_id = $newClient->id;
+                $newPersonalInfo->issued_by = $data['issued_by'];
+                $newPersonalInfo->series_number = $data['series_number'];
+                $newPersonalInfo->inn = $data['inn'];
+                $newPersonalInfo->save();
+            }
+        }
+
+        $model = new Deal();
+        $model->user_id = $auth_user_id;
+        $model->client_id = $client_id;
+        $model->date_deal = date('Y-m-d');
+        $model->status = Constants::ACTIVE;
+        $model->type = $data['lead_status'];
+        $model->looking_for = $data['looking_for'];
+        if ($model->save()) {
+            return redirect()->route('forthebuilder.clients.index')->with('success', translate('successfully'));
+        }
+
+        $leadStatuses = LeadStatus::all();
+        return view('forthebuilder::clients.create', [
+            'leadStatuses' => $leadStatuses,
+            'data' => $data,
+        ])->with('warning', translate('This lead is exist'));
     }
 
     public function calendar()

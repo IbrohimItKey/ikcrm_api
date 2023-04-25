@@ -27,6 +27,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/house', [\App\Http\Controllers\HouseController::class, 'index']);
     Route::group(['prefix' => 'clients'], function () {
         Route::get('/index', [ClientsController::class, 'Index']);
+        Route::get('/all-clients', [ClientsController::class, 'allClients']);
+        Route::post('/insert', [ClientsController::class, 'insert']);
     });
     Route::group(['prefix' => 'task'], function () {
         Route::get('/index', [TaskController::class, 'index']);
