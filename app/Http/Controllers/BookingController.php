@@ -46,10 +46,11 @@ class BookingController extends Controller
     //     return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
     // }
 
-    public function index()
+    public function index(Request $request)
     {
         // $data=DB::table('forthebiulder.booking')->get();
         // dd($data);
+        // dd($request->all());
         $models = Booking::all();
         $list = [];
         foreach ($models as $key => $model) {
@@ -66,16 +67,27 @@ class BookingController extends Controller
                 array_push($list, $data);
             }
         }
-        $list = $this->paginate($list, 10);
-        $list->path('');
 
 
-        $response = [
+        $page = $request->page;
+        $pagination = Constants::PAGINATION; 
+        $offset = ($page - 1) * $pagination;
+        $endCount = $offset + $pagination;
+        $count = count($list);
+        $paginated_results=array_slice($list, $offset, $pagination);
+        $paginatin_count=ceil($count/$pagination);
+        return response([
             'status' => true,
             'message' => 'success',
-            'data' => $list
-        ];
-        return  response($response);
+            'data' => $paginated_results,
+            "pagination"=>true,
+            "pagination_count"=>$paginatin_count
+        ]);
+
+
+
+
+
 
         // dd($list);
 
