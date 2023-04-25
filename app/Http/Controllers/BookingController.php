@@ -194,13 +194,22 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+        
         $user = Auth::user();
         $booking = Booking::where(['house_flat_id' => $request->house_flat_id, 'status' => Constants::BOOKING_ACTIVE])->first();
         // $booking_any = House::first();
         // $house_flat = HouseFlat::find($request->house_flat_id);
         date_default_timezone_set("Asia/Tashkent");
         if ($booking) {
-            return redirect()->back()->with('warning', translate('This apartment had been booked by another person'));
+            // return redirect()->back()->with('warning', '');
+            return response([
+                'status' => false,
+                'message' => 'This apartment had been booked by another person',
+                // 'data' => $paginated_results,
+                // "pagination"=>true,
+                // "pagination_count"=>$paginatin_count
+            ]);
+
         } else {
             DB::beginTransaction();
             try {
@@ -272,6 +281,19 @@ class BookingController extends Controller
                 // dd($house_flat);
 
                 DB::commit();
+
+
+                return response([
+                    'status' => true,
+                    'message' => 'success',
+                    // 'data' => $paginated_results,
+                    // "pagination"=>true,
+                    // "pagination_count"=>$paginatin_count
+                ]);
+
+
+
+
                 return redirect()->route('forthebuilder.booking.index')->with('success', __('locale.Prepayment has been added'));
             } catch (\Exception $e) {
                 dd($e->getMessage());
@@ -401,18 +423,19 @@ class BookingController extends Controller
      * @param int $id
      * @return Renderable
      */
-    public function show($id)
+    public function show(Request $request)
     {
-        $model = Booking::find($id);
-        // dd($id);
-        $booking = ['Booking', 'BookingPrepayment'];
-        $notifications = Notification_::whereIn('type', $booking)->where('notifiable_id', $id)->get();
-        if(isset($notifications)){
-            foreach ($notifications as $notification){
-                $notification->read_at = date('Y-m-d');
-                $notification->save();
-            }
-        }
+        // dd($request->all());
+        // $model = Booking::find($request->id);
+        // // dd($id);
+        // $booking = ['Booking', 'BookingPrepayment'];
+        // $notifications = Notification_::whereIn('type', $booking)->where('notifiable_id', $id)->get();
+        // if(isset($notifications)){
+        //     foreach ($notifications as $notification){
+        //         $notification->read_at = date('Y-m-d');
+        //         $notification->save();
+        //     }
+        // }
         // $models = Booking::all();
         // $client=Clients::where('id',$model->client_id)->first();
         $new_user = DB::table('forthebuilder.booking as dt1')
@@ -421,27 +444,20 @@ class BookingController extends Controller
             ->leftJoin('forthebuilder.house_flat as dt4', 'dt4.id', '=', 'dt1.house_flat_id')
             ->leftJoin('forthebuilder.house_document as dt5', 'dt5.house_flat_id', '=', 'dt1.house_flat_id')
             ->leftJoin('newhouse.users as dt6', 'dt6.id', '=', 'dt1.user_id')
-            ->where('dt1.id', $id)
+            ->where('dt1.id', $request->id)
             ->select('dt1.id', 'dt1.prepayment', 'dt1.expire_dates', 'dt1.status', 'dt2.first_name as client_first_name', 'dt2.last_name as client_last_name', 'dt2.middle_name as client_middle_name', 'dt2.phone','dt2.additional_phone', 'dt3.series_number', 'dt4.number_of_flat', 'dt4.id as house_flat_id', 'dt5.guid', 'dt6.first_name as manager_first_name', 'dt6.last_name as manager_last_name', 'dt6.middle_name as manager_middle_name')
             ->first();
         // ->distinct('dt1.user_id')
         // ->count();
         // dd($new_user);
-        // img src="{{ asset('/uploads/house-flat/' . $img->house_flat_id . '/m_' . $img->guid) }}"
-        //                                         class="img-fluid mb-2" alt="red sample" />
 
+        return response([
+            'status' => true,
+            'message' => 'success',
+            'data' => $new_user
+        ]);
 
-
-        // $data=[
-        //     'id'=>$model->id,
-        //     // 'full_name'=>$client->first_name. ' ' .$client->last_name. ' ' .$client->middle_name,
-        //     // 'phone'=>$client->phone,
-        //     'status'=>$model->status,
-        //     'prepayment'=>$model->prepayment,
-        // ] ;
-
-
-        return view('forthebuilder::booking.show', ['all_notifications' => $this->getNotification()])->with(['model' => $new_user]);
+        // return view('forthebuilder::booking.show', ['all_notifications' => $this->getNotification()])->with(['model' => $new_user]);
     }
 
     /**
