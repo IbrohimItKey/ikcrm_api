@@ -36,15 +36,28 @@ class UserController extends Controller
     public function index()
     {
         if(Gate::allows('isAdmin')){
-            $models = User::where('status',2)->where('id', '!=', Auth::user()->id)->orderBy('id','desc')->paginate(config('params.pagination'));
+            $models = User::select('id', 'first_name', 'last_name', 'middle_name', 'email', 'avatar')
+                ->where('status',2)->where('id', '!=', Auth::user()->id)->orderBy('id','desc')->paginate(config('params.pagination'));
         }else{
-            $models = User::where('status',2)->where('id', '!=', Auth::user()->id)->where('role_id', 2)->orderBy('id','desc')->paginate(config('params.pagination'));
+            $models = User::select('id', 'first_name', 'last_name', 'middle_name', 'email', 'avatar')
+                ->where('status',2)->where('id', '!=', Auth::user()->id)->where('role_id', 2)->orderBy('id','desc')->paginate(config('params.pagination'));
         }
-
-        return view('forthebuilder::user.index',[
-            'models' => $models,
-            'all_notifications' => $this->getNotification()
-        ]);
+        $response = [];
+        foreach ($models as $model){
+            $response = [
+                "status" => true,
+                "message" => "success",
+                "data" => [
+                    'id' => $model->id,
+                    'first_name' => $model->first_name,
+                    'last_name' => $model->last_name,
+                    'middle_name' => $model->middle_name,
+                    'email' => $model->email,
+                    'image' => asset('/uploads/user/' . $model->id . '/s_' . $model->avatar),
+                ]
+            ];
+        }
+        return response($response);
     }
 
     public function settings(){
@@ -75,6 +88,7 @@ class UserController extends Controller
      */
     public function store(ForTheBuilderUserRequest $request)
     {
+        return response('good');
         $data = $request->validated();
         $data['status'] = 2;
         $data['password'] = Hash::make($data['password']);
@@ -99,8 +113,12 @@ class UserController extends Controller
 
         }
         Log::channel('action_logs2')->info("пользователь создал новую Пользователь : " . $model->first_name."",['info-data'=>$model]);
-
-        return redirect()->route('forthebuilder.user.index')->with('success', __('locale.successfully'));
+        $response = [
+            "status" => true,
+            "message" => "success",
+            "id" => $model->id
+        ];
+        return response($response);
     }
 
     /**

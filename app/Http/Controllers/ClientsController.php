@@ -778,36 +778,14 @@ class ClientsController extends Controller
         if (isset($request->house_flat_id)) {
             $model->house_flat_id = $request->house_flat_id;
         }
-        switch ($model->type) {
-            case 1:
-                $old_type = 'First contact';
-                break;
-            case 2:
-                $old_type = 'Negotiation';
-                break;
-            case 3:
-                $old_type = 'Making a deal';
-                break;
-        }
-        switch ($request->type) {
-            case 1:
-                $new_type = 'First contact';
-                break;
-            case 2:
-                $new_type = 'Negotiation';
-                break;
-            case 3:
-                $new_type = 'Making a deal';
-                break;
-        }
-        $model->type = $request->type;
         if ($model->history == NULL) {
-            $model->history = json_encode([['date' => date('Y-m-d H:i:s'), 'user' => $user->first_name, 'user_id' => $user->id, 'user_photo' => $user->avatar, 'new_type' => $new_type, 'old_type' => $old_type]]);
+            $model->history = json_encode([['date' => date('Y-m-d H:i:s'), 'user' => $user->first_name, 'user_id' => $user->id, 'user_photo' => $user->avatar, 'new_type' => $request->type, 'old_type' => $model->type]]);
         } else {
             $old_history = json_decode($model->history);
-            $old_history[] = ['date' => date('Y-m-d H:i:s'), 'user' => $user->first_name, 'user_id' => $user->id,  'user_photo' => $user->avatar, 'new_type' => $new_type, 'old_type' => $old_type];
+            $old_history[] = ['date' => date('Y-m-d H:i:s'), 'user' => $user->first_name, 'user_id' => $user->id,  'user_photo' => $user->avatar, 'new_type' => $request->type, 'old_type' => $model->type];
             $model->history = json_encode($old_history);
         }
+        $model->type = $request->type;
         if (isset($request->series_number) || isset($request->issued_by) || isset($request->inn)) {
             if (isset($request->personal_id)) {
                 $personal = PersonalInformations::find($request->personal_id);
