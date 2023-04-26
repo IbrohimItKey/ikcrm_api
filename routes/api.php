@@ -74,6 +74,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/edit', [LanguageController::class, 'languageEdit']);
         // Route::post('/insert', [BookingController::class, 'store']);
         Route::post('/update', [LanguageController::class, 'update']);
+        Route::post('/delete', [LanguageController::class, 'languageDestroy']);
         // Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
 
     });

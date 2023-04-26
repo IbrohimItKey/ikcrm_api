@@ -316,10 +316,7 @@ class LanguageController extends Controller
                     $language_translations->save();
                 }
             }
-
-
-
-
+            
             return response([
                 'status' => true,
                 'message' => 'success'
@@ -331,19 +328,28 @@ class LanguageController extends Controller
         }
     }
 
-    public function languageDestroy($id)
+    public function languageDestroy(Request $request)
     {
-        $language = Language::findOrFail(decrypt($id));
+        $language = Language::findOrFail($request->id);
         // dd(env('DEFAULT_LANGUAGE','ru'));
         // dd($language);
         if (env('DEFAULT_LANGUAGE', 'ru') == $language->code) {
-            return back();
+
+            return response([
+                'status' => false,
+                'message' => 'Sorry, this is the default language',
+            ]);
             // return error();
         } else {
             $language->delete();
             // flash(translate('Language has been deleted successfully'))->success();
         }
-        return redirect()->route('forthebuilder.language.index');
+
+        return response([
+            'status' => true,
+            'message' => 'success',
+        ]);
+        // return redirect()->route('forthebuilder.language.index');
     }
 
 
