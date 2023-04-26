@@ -360,9 +360,10 @@ class DealController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request)
     {
-        $model = Deal::find($id);
+        $user = Auth::user();
+        $model = Deal::find($request->id);
         switch ($model->type) {
             case 1:
                 $old_type = 'First contact';

@@ -52,4 +52,7 @@ class Constants extends Model
     const PAYMENT_30 = 30;
     const PAYMENT_50 = 50;
     const PAYMENT_100 = 100;
+
+     // For Pagination pagination - count
+     const PAGINATION = 10; // Default
 }
