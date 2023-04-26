@@ -36,7 +36,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/index', [ClientsController::class, 'Index']);
         Route::get('/all-clients', [ClientsController::class, 'allClients']);
         Route::post('/insert', [ClientsController::class, 'insert']);
-        Route::get('/show', [ClientsController::class, 'show'])->name('clients.show');
+        Route::post('/update', [ClientsController::class, 'update']);
+        Route::get('/show', [ClientsController::class, 'show']);
+        Route::post('/delete', [ClientsController::class, 'delete']);
     });
     Route::get('/calendar', [ClientsController::class, 'calendar']);
     Route::group(['prefix' => 'task'], function () {
