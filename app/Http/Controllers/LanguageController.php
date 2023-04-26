@@ -214,16 +214,16 @@ class LanguageController extends Controller
      * Show the form for creating a new resource.
      * @return Renderable
      */
-    public function create()
-    {
-        // return 'came';
+    // public function create()
+    // {
+    //     // return 'came';
 
-        $languages = Language::get();
-        return view('forthebuilder::language.create', [
-            'languages'=>$languages,
-            'all_notifications' => $this->getNotification()
-            ]);
-    }
+    //     $languages = Language::get();
+    //     return view('forthebuilder::language.create', [
+    //         'languages'=>$languages,
+    //         'all_notifications' => $this->getNotification()
+    //         ]);
+    // }
 
     /**
      * Store a newly created resource in storage.
@@ -232,23 +232,59 @@ class LanguageController extends Controller
      */
     public function store(Request $request)
     {
-        $language = Language::updateOrCreate(
-            ['name' => $request->name, 'code' => $request->code]
-        );
-        // $language->name = $request->name;
-        if ($language->save()) {
-            // dd($language->all());
 
-            foreach (Language::all() as $language) {
-                // Language Translations
-                $language_translations = LanguageTranslation::firstOrNew(['lang' => $language->code, 'language_id' => $language->id]);
-                $language_translations->name = $language->name;
-                $language_translations->save();
-            }
-
-
-            return redirect()->route('forthebuilder.language.index');
+        if ($request->method() == 'POST') {
+                $language = Language::updateOrCreate(
+                    ['name' => $request->name, 'code' => $request->code]
+                );
+                // $language->name = $request->name;
+                if ($language->save()) {
+                    // dd($language->all());
+        
+                    foreach (Language::all() as $language) {
+                        // Language Translations
+                        $language_translations = LanguageTranslation::firstOrNew(['lang' => $language->code, 'language_id' => $language->id]);
+                        $language_translations->name = $language->name;
+                        $language_translations->save();
+                    }
+        
+                    return response([
+                        'status' => true,
+                        'message' => 'success',
+                    ]);
+            
+                    // return redirect()->route('forthebuilder.language.index');
+                }
         }
+        $languages = Language::get();
+
+        return response([
+            'status' => true,
+            'message' => 'success',
+            'data' =>$languages
+        ]);
+
+
+
+
+
+        // $language = Language::updateOrCreate(
+        //     ['name' => $request->name, 'code' => $request->code]
+        // );
+        // // $language->name = $request->name;
+        // if ($language->save()) {
+        //     // dd($language->all());
+
+        //     foreach (Language::all() as $language) {
+        //         // Language Translations
+        //         $language_translations = LanguageTranslation::firstOrNew(['lang' => $language->code, 'language_id' => $language->id]);
+        //         $language_translations->name = $language->name;
+        //         $language_translations->save();
+        //     }
+
+
+        //     return redirect()->route('forthebuilder.language.index');
+        // }
     }
 
 
@@ -262,7 +298,7 @@ class LanguageController extends Controller
         // return 'came';
         // dd($request->id);
 
-        // $languages = Language::get();
+        $languages = Language::get();
         $first_language = Language::findOrFail($request->id);
         // dd($first_language);
 
@@ -270,7 +306,9 @@ class LanguageController extends Controller
         return response([
             'status' => true,
             'message' => 'success',
-            'data' => $first_language
+            'data' => $first_language,
+            'languages'=>$languages
+
         ]);
 
 
@@ -316,7 +354,7 @@ class LanguageController extends Controller
                     $language_translations->save();
                 }
             }
-            
+
             return response([
                 'status' => true,
                 'message' => 'success'

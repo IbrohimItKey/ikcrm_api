@@ -72,7 +72,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::group(['prefix' => 'language'], function () {
         Route::get('/index', [LanguageController::class, 'index']);
         Route::get('/edit', [LanguageController::class, 'languageEdit']);
-        // Route::post('/insert', [BookingController::class, 'store']);
+
+        Route::match(['get', 'post'],'/create',[LanguageController::class, 'store']);
+
         Route::post('/update', [LanguageController::class, 'update']);
         Route::post('/delete', [LanguageController::class, 'languageDestroy']);
         // Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
