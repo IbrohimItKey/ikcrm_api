@@ -8,6 +8,7 @@ use App\Http\Controllers\HouseController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForTheBuilderController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\LanguageController;
 use App\Models\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -56,6 +57,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/insert', [BookingController::class, 'store']);
         Route::post('/show/status/update', [BookingController::class, 'statusUpdate']);
         Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
+
+    });
+    Route::group(['prefix' => 'language'], function () {
+        Route::get('/index', [LanguageController::class, 'index']);
+        Route::get('/edit', [LanguageController::class, 'languageEdit']);
+        // Route::post('/insert', [BookingController::class, 'store']);
+        Route::post('/update', [LanguageController::class, 'update']);
+        // Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
 
     });
 });

@@ -19,6 +19,8 @@ use App\Http\Requests\InstallmentPlanRequest;
 use App\Models\Language;
 use App\Models\Translation;
 use App\Models\LanguageTranslation;
+use App\Models\Constants;
+
 //use Stichoza\GoogleTranslate\GoogleTranslate;
 
 use Illuminate\Pagination\Paginator;
@@ -105,15 +107,43 @@ class LanguageController extends Controller
     //     //  flash(translate('Language changed to ') . $language->name)->success();
     // }
 
-    public function index()
+    public function index(Request $request)
     {
 
-        $languages = Language::get();
+        $languages = Language::get()->toArray();
         // dd($languages);
-        return view('forthebuilder::language.index', [
-            'languages' => $languages,
-            'all_notifications' => $this->getNotification()
+
+
+
+        $page = $request->page;
+        $pagination = Constants::PAGINATION; 
+        $offset = ($page - 1) * $pagination;
+        $endCount = $offset + $pagination;
+        $count = count($languages);
+        // dd($count);
+        $paginated_results=array_slice($languages, $offset, $pagination);
+        $paginatin_count=ceil($count/$pagination);
+        return response([
+            'status' => true,
+            'message' => 'success',
+            'data' => $paginated_results,
+            "pagination"=>true,
+            "pagination_count"=>$paginatin_count
         ]);
+
+
+
+
+
+
+
+
+
+
+        // return view('forthebuilder::language.index', [
+        //     'languages' => $languages,
+        //     'all_notifications' => $this->getNotification()
+        // ]);
 
         // return 'came';
 
@@ -227,19 +257,31 @@ class LanguageController extends Controller
      * @param int $id
      * @return Renderable
      */
-    public function languageEdit($id)
+    public function languageEdit(Request $request)
     {
         // return 'came';
-        // dd()
+        // dd($request->id);
 
-        $languages = Language::get();
-        $first_language = Language::findOrFail(decrypt($id));
+        // $languages = Language::get();
+        $first_language = Language::findOrFail($request->id);
         // dd($first_language);
-        return view('forthebuilder::language.edit', [
-            'first_language'=>$languages,
-            'languages'=>$first_language,
-            'all_notifications' => $this->getNotification()
+
+
+        return response([
+            'status' => true,
+            'message' => 'success',
+            'data' => $first_language
         ]);
+
+
+
+
+
+        // return view('forthebuilder::language.edit', [
+        //     'first_language'=>$languages,
+        //     'languages'=>$first_language,
+        //     'all_notifications' => $this->getNotification()
+        // ]);
 
 
 
@@ -265,15 +307,27 @@ class LanguageController extends Controller
         if ($language->save()) {
 
 
+            $default_language=env('DEFAULT_LANGUAGE','ru');
             // dd(default_language());
-            if (LanguageTranslation::where('language_id', $language->id)->where('lang', default_language())->first()) {
+            if (LanguageTranslation::where('language_id', $language->id)->where('lang', $default_language)->first()) {
                 foreach (Language::all() as $language) {
                     $language_translations = LanguageTranslation::firstOrNew(['lang' => $language->code, 'language_id' => $language->id]);
                     $language_translations->name = $request->name;
                     $language_translations->save();
                 }
             }
-            return redirect()->route('forthebuilder.language.index');
+
+
+
+
+            return response([
+                'status' => true,
+                'message' => 'success'
+            ]);
+
+
+
+            // return redirect()->route('forthebuilder.language.index');
         }
     }
 
