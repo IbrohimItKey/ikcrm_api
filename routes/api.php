@@ -35,6 +35,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::group(['prefix' => 'clients'], function () {
         Route::get('/index', [ClientsController::class, 'Index']);
+        Route::get('/all-clients', [ClientsController::class, 'allClients']);
+        Route::post('/insert', [ClientsController::class, 'insert']);
         Route::get('/show', [ClientsController::class, 'show'])->name('clients.show');
     });
     Route::get('/calendar/index', [ClientsController::class, 'calendar']);
@@ -60,6 +62,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::group(['prefix' => 'booking'], function () {
         Route::get('/index', [BookingController::class, 'index']);
-        // Route::get('/update-status', [BookingController::class, 'updateStatus']);
+        Route::get('/show', [BookingController::class, 'show']);
+        Route::post('/insert', [BookingController::class, 'store']);
+        Route::post('/show/status/update', [BookingController::class, 'statusUpdate']);
+        Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
+
     });
 });

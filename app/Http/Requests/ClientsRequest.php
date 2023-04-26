@@ -20,18 +20,16 @@ class ClientsRequest extends BaseFormRequest
     public function store()
     {
         return [
-            'client_id' => 'nullable|integer',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'phone' => 'required|string|max:25',
-            'additional_phone' => 'nullable|string|max:25',
+            'additional_phone_number' => 'nullable|string|max:25',
             'email' => 'nullable|string|max:255',
             'source' => 'nullable|string|max:255',
-            'lead_status' => 'nullable|string|max:25',
-            'series_number' => 'nullable|string|max:255|unique:mysql2.' . DB::connection('mysql2')->getDatabaseName() . '.personal_informations',
+            'series_number' => 'nullable|string|max:255|unique:mysql.' . DB::connection('mysql')->getDatabaseName() . '.personal_informations',
             'issued_by' => 'nullable|string|max:255',
-            'inn' => 'nullable|string|max:255|unique:mysql2.' . DB::connection('mysql2')->getDatabaseName() . '.personal_informations',
+            'inn' => 'nullable|string|max:255|unique:mysql.' . DB::connection('mysql')->getDatabaseName() . '.personal_informations',
             'looking_for' => 'nullable|string|max:255',
 
             // 'gender' => 'nullable|integer',
@@ -57,9 +55,9 @@ class ClientsRequest extends BaseFormRequest
             'email' => 'nullable|string|max:255',
             'source' => 'nullable|string|max:255',
             'lead_status' => 'required|string|max:25',
-            'series_number' => 'nullable|string|max:255|unique:mysql2.' . DB::connection('mysql2')->getDatabaseName() . '.clients',
+            'series_number' => 'nullable|string|max:255|unique:mysql.' . DB::connection('mysql')->getDatabaseName() . '.clients',
             'issued_by' => 'nullable|string|max:255',
-            'inn' => 'nullable|string|max:255|unique:mysql2.' . DB::connection('mysql2')->getDatabaseName() . '.personal_informations',
+            'inn' => 'nullable|string|max:255|unique:mysql.' . DB::connection('mysql')->getDatabaseName() . '.personal_informations',
             'looking_for' => 'nullable|string|max:255',
 
             // 'name' => 'required|string|max:255',
@@ -70,7 +68,7 @@ class ClientsRequest extends BaseFormRequest
             // 'phone' => 'required|string|max:25',
             // 'additional_phone' => 'nullable|string|max:25',
             // // 'series_number' => 'nullable|string|max:255',
-            // 'series_number' => 'required|string|max:255|unique:mysql2.' . DB::connection('mysql2')->getDatabaseName() . '.clients',
+            // 'series_number' => 'required|string|max:255|unique:mysql.' . DB::connection('mysql')->getDatabaseName() . '.clients',
             // // 'series_number' => 'nullable|string|max:255',
             // 'issued_by' => 'nullable|string|max:255',
             // 'inn' => 'nullable|string|max:255',
