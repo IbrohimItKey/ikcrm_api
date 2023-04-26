@@ -8,6 +8,7 @@ use App\Http\Controllers\HouseController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForTheBuilderController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\UserController;
 use App\Models\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,17 +37,26 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/index', [ClientsController::class, 'Index']);
         Route::get('/show', [ClientsController::class, 'show'])->name('clients.show');
     });
-    Route::get('/calendar', [ClientsController::class, 'calendar']);
+    Route::get('/calendar/index', [ClientsController::class, 'calendar']);
     Route::group(['prefix' => 'task'], function () {
         Route::get('/index', [TaskController::class, 'index']);
+    });
+    Route::group(['prefix' => 'user'], function () {
+        Route::get('/index', [UserController::class, 'index'])->name('user.index');
+        Route::post('/insert', [UserController::class, 'store'])->name('user.store');
+        Route::put('/update', [UserController::class, 'update'])->name('user.update');
+        Route::get('/show', [UserController::class, 'show'])->name('user.show');
+        Route::delete('/destroy', [UserController::class, 'destroy'])->name('user.destroy');
     });
     Route::group(['prefix' => 'installment-plan'], function () {
         Route::get('/index', [InstallmentPlanController::class, 'index']);
         Route::get('/show', [InstallmentPlanController::class, 'show']);
+        Route::post('/pay-sum', [InstallmentPlanController::class, 'paySum']);
+        Route::post('/remove-payment', [InstallmentPlanController::class, 'reduceSum']);
     });
     Route::group(['prefix' => 'deal'], function () {
         Route::get('/index', [DealController::class, 'index']);
-        Route::get('/update-status', [DealController::class, 'updateStatus']);
+        Route::post('/update-status', [DealController::class, 'updateStatus']);
     });
     Route::group(['prefix' => 'booking'], function () {
         Route::get('/index', [BookingController::class, 'index']);

@@ -85,16 +85,55 @@ class InstallmentPlanController extends Controller
      * @param int $id
      * @return Renderable
      */
-    public function show($id)
+    public function show(Request $request)
     {
-        $model = Deal::findOrFail($id);
-        $statuses = PayStatus::where('deal_id', $id)->get();
+        $model = Deal::findOrFail($request->id);
+        $statuses = PayStatus::where('deal_id', $request->id)->get();
         //        $statuses = $model->status();
-        return view('forthebuilder::installment-plan.show', [
-            'model' => $model,
-            'statuses' => $statuses,
-            'all_notifications' => $this->getNotification()
-        ]);
+        $client_first_name = $model->client->first_name ?? '';
+        $client_last_name = $model->client->last_name ?? '';
+        $client_middle_name = $model->client->middle_name ?? '';
+        foreach ($statuses as $status){
+            switch($status->status){
+                case 0:
+                    $status_name = 'Не оплачен';
+                    break;
+                case 1:
+                    $status_name = 'Оплачен';
+                    break;
+                case 2:
+                    $status_name = 'Частичная оплата';
+                    break;
+                default:
+                    $status_name = 'Не оплачен';
+            }
+            $installment_plan[] = [
+                'id' => $status->id,
+                'pay_date' => $status->must_pay_date,
+                'price_to_pay' => $status->price_to_pay,
+                'status' => $status_name,
+            ];
+        }
+
+        $response = [
+            "status" => true,
+            "message" => "success",
+            'data' => [
+              'client_full_name'=> $client_first_name.' '.$client_last_name.' '.$client_middle_name,
+              'client_email'=> $model->client->email ?? '',
+              'client_phone'=>$model->phone ?? '',
+              'client_series_number'=>$model->client->informations->series_number ?? '' ,
+              'initial_fee_date'=> date('d.m.Y', strtotime($model->initial_fee_date)),
+              'agreement_number'=> $model->agreement_number ?? '',
+              'price_sell'=> number_format($model->price_sell, 2, ',', '.'),
+              'initial_fee'=> number_format($model->initial_fee, 2, ',', '.'),
+              'period'=> $model->installmentPlan->period ,
+              'user_full_name' => $model && $model->user ? $model->user->first_name . ' ' . $model->user->last_name . ' ' . $model->user->middle_name : '',
+              'house_flat_image' =>  asset('/uploads/house-flat/' . $model->house_id . '/m_' . $model->house_flat->main_image->guid),
+              'installment-plan' => $installment_plan,
+            ],
+        ];
+        return response($response);
     }
 
     /**
@@ -167,10 +206,10 @@ class InstallmentPlanController extends Controller
         if ($validator->fails()) {
             return response()->json($validator);
         }
-
-        $model_paystatus = PayStatus::where(['installment_plan_id' => $request->installment_plan_id, 'deal_id' => $request->deal_id])
+        $model_paystatus = PayStatus::where(['installment_plan_id' => $request->id, 'deal_id' => $request->deal_id])
             ->WhereIn('status', [Constants::HALF_PAY, Constants::NOT_PAID])->orderBy('id', 'asc')->get();
         // pre($model_paystatus);
+        $paystatus_id = [];
         if (!empty($model_paystatus)) {
             $payingSum = $request->sum;
             foreach ($model_paystatus as $key => $value) {
@@ -178,6 +217,7 @@ class InstallmentPlanController extends Controller
                 $arr = $value->price_history ? json_decode($value->price_history) : [];
                 $oldPrice = $value->price_to_pay;
                 if ($value->price_to_pay == $payingSum) {
+                    $paystatus_id[] = $value->id;
                     $value->price_to_pay = 0;
                     $value->status = Constants::PAID;
                     $arr[] = ['date' => date('Y-m-d H:i:s'), 'price' => $oldPrice - $value->price_to_pay];
@@ -185,7 +225,8 @@ class InstallmentPlanController extends Controller
                     $value->save();
                     $payingSum = 0;
                     break;
-                } else if ($value->price_to_pay > $payingSum) {
+                } else if ($value->price_to_pay > $payingSum && $payingSum != 0) {
+                    $paystatus_id[] = $value->id;
                     $value->price_to_pay = $value->price_to_pay - $payingSum;
                     $value->status = Constants::HALF_PAY;
                     $arr[] = ['date' => date('Y-m-d H:i:s'), 'price' => $oldPrice - $value->price_to_pay];
@@ -194,6 +235,7 @@ class InstallmentPlanController extends Controller
                     $payingSum = 0;
                     break;
                 } else if ($value->price_to_pay < $payingSum) {
+                    $paystatus_id[] = $value->id;
                     $value->price_to_pay = 0;
                     $value->status = Constants::PAID;
                     $arr[] = ['date' => date('Y-m-d H:i:s'), 'price' => $oldPrice - $value->price_to_pay];
@@ -205,8 +247,12 @@ class InstallmentPlanController extends Controller
                 }
             }
         }
-        // [{"date": "2023-04-03 12:47:28", "price": 15000}]
-        return redirect()->back()->with('success', translate('Status change'));
+        $response = [
+            "status" => true,
+            "message" => "success",
+            'id' => $paystatus_id
+        ];
+        return response($response);
     }
 
     // public function paySum(Request $request)
@@ -258,10 +304,18 @@ class InstallmentPlanController extends Controller
             $model->pay_date = NULL;
             $model->save();
         } else {
-            return redirect()->back()->with('warning', translate('Only an admin can cancel a payment'));
+            $response = [
+                "status" => true,
+                "message" => "not found",
+            ];
+            return response($response);
         }
-
-        return redirect()->back()->with('success', translate('Status changed'));
+        $response = [
+            "status" => true,
+            "message" => "success",
+            'id' => $model->id
+        ];
+        return response($response);
     }
 
     public function updateStatus(Request $request, $id)
