@@ -6,36 +6,18 @@ use App\Models\Deal;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Models\Currency;
-use App\Models\House;
-use App\Models\HouseFlat;
-use App\Models\InstallmentPlan;
-use App\Models\LeadComment;
 use App\Models\Clients;
-use App\Models\LeadStatus;
 use App\Models\Notification_;
 use App\Models\PersonalInformations;
-use App\Models\StatusColors;
-use App\Exports\LeadsExport;
 use App\Http\Requests\ClientsRequest;
-use App\Imports\LeadsImport;
-use App\Http\Requests\TaskRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Task;
-use App\Events\RealTimeMessage;
-use App\Notifications\TaskNotification;
-use Illuminate\Support\Facades\Notification;
 use App\Models\User;
 use App\Models\Booking;
 use App\Models\Chat;
 use App\Models\Constants;
 use App\Models\PayStatus;
-use PHPUnit\TextUI\XmlConfiguration\Constant;
 
 class ClientsController extends Controller
 {
@@ -133,7 +115,6 @@ class ClientsController extends Controller
             "pagination_count" => 0,
             'data' => $arr,
         ];
-        // pre($defaultAction);
         return response($response);
     }
 
@@ -158,6 +139,7 @@ class ClientsController extends Controller
                 $i++;
             }
         }
+
         $response = [
             'status' => true,
             'message' => 'success',
@@ -166,13 +148,6 @@ class ClientsController extends Controller
             'data' => $arr,
         ];
         return response($response);
-        // return view('forthebuilder::clients.all-clients', [
-        //     'models' => $models,
-        //     'active' => Constants::CLIENT_ACTIVE,
-        //     'archive' => Constants::CLIENT_DELETED,
-        //     'all_notifications' => $this->getNotification()
-        //     // 'defaultAction' => $defaultAction,
-        // ]);
     }
 
     /**
@@ -183,49 +158,33 @@ class ClientsController extends Controller
 
     public function insert(ClientsRequest $request)
     {
-        return $request->header('token');
         $data = $request->validated();
 
-        $auth_user_id = User::where(['token' => $request->header('token')])->get();
-        return $auth_user_id;
-        $client_id = $data['client_id'];
-        if (isset($data['client_id']) && $data['client_id'] != null && $data['client_id'] != 'null') {
-            $existPersonalInfo = PersonalInformations::where(['client_id' => $data['client_id'], 'series_number' => $data['series_number']])->first();
-            if (isset($existPersonalInfo)) {
-                $existClient = Clients::find($data['client_id']);
-                $existClient->first_name = $data['first_name'];
-                $existClient->last_name = $data['last_name'];
-                $existClient->middle_name = $data['middle_name'];
-                $existClient->phone = $data['phone'];
-                $existClient->additional_phone = $data['additional_phone'];
-                $existClient->email = $data['email'];
-                $existClient->source = $data['source'];
-                $existClient->lead_status = $data['lead_status'];
-                $existClient->save();
-                $client_id = $existClient->id;
-            }
-        } else {
-            $newClient = new Clients();
-            $newClient->user_id = $auth_user_id;
-            $newClient->first_name = $data['first_name'];
-            $newClient->last_name = $data['last_name'];
-            $newClient->middle_name = $data['middle_name'];
-            $newClient->phone = $data['phone'];
-            $newClient->additional_phone = $data['additional_phone'];
-            $newClient->email = $data['email'];
-            $newClient->source = $data['source'];
-            $newClient->status = Constants::CLIENT_ACTIVE;
-            $newClient->save();
+        $user = User::where(['token' => $request->header('token')])->first();
+        $auth_user_id = 0;
+        if (isset($user))
+            $auth_user_id = $user->id;
 
-            $client_id = $newClient->id;
-            if (isset($data['series_number'])) {
-                $newPersonalInfo = new PersonalInformations();
-                $newPersonalInfo->client_id = $newClient->id;
-                $newPersonalInfo->issued_by = $data['issued_by'];
-                $newPersonalInfo->series_number = $data['series_number'];
-                $newPersonalInfo->inn = $data['inn'];
-                $newPersonalInfo->save();
-            }
+        $newClient = new Clients();
+        $newClient->user_id = $auth_user_id;
+        $newClient->first_name = $data['first_name'];
+        $newClient->last_name = $data['last_name'];
+        $newClient->middle_name = $data['middle_name'];
+        $newClient->phone = $data['phone'];
+        $newClient->additional_phone = $data['additional_phone_number'];
+        $newClient->email = $data['email'];
+        $newClient->source = $data['source'];
+        $newClient->status = Constants::CLIENT_ACTIVE;
+        $newClient->save();
+
+        $client_id = $newClient->id;
+        if (isset($data['series_number'])) {
+            $newPersonalInfo = new PersonalInformations();
+            $newPersonalInfo->client_id = $newClient->id;
+            $newPersonalInfo->issued_by = $data['issued_by'];
+            $newPersonalInfo->series_number = $data['series_number'];
+            $newPersonalInfo->inn = $data['inn'];
+            $newPersonalInfo->save();
         }
 
         $model = new Deal();
@@ -233,739 +192,12 @@ class ClientsController extends Controller
         $model->client_id = $client_id;
         $model->date_deal = date('Y-m-d');
         $model->status = Constants::ACTIVE;
-        $model->type = $data['lead_status'];
+        $model->type = Constants::FIRST_CONTACT;
         $model->looking_for = $data['looking_for'];
-        if ($model->save()) {
-            return redirect()->route('forthebuilder.clients.index')->with('success', translate('successfully'));
-        }
-
-        $leadStatuses = LeadStatus::all();
-        return view('forthebuilder::clients.create', [
-            'leadStatuses' => $leadStatuses,
-            'data' => $data,
-        ])->with('warning', translate('This lead is exist'));
-    }
-
-    public function calendar()
-    {
-        $user = Auth::user();
-        $models = Task::where('deleted_at', NULL)->get();
-        foreach ($models as $model) {
-            $tasks[] = [
-                'id' => $model->id,
-                'href' => route('clients.show', [$model->deal->client->id, '0', '0']),
-                'first_name' => $model->performer->first_name,
-                'last_name' => $model->performer->last_name,
-                'middle_name' => $model->performer->middle_name,
-                'created_at' => $model->created_at,
-                'email' => $model->performer->email,
-                'task_date' => $model->task_date,
-                'type' => $model->type,
-                'user_first_name' => $model->user->first_name ?? '',
-                'user_last_name' => $model->user->last_name ?? '',
-            ];
-        }
-        //        $my_models = Task::where('performer_id', $user->id)->where('deleted_at', NULL)->get();
-        //        foreach ($my_models as $my_model){
-        //            $my_tasks[] = [
-        //                'id' => $my_model->id,
-        //                'href' => route('clients.show', [$my_model->deal->client->id, '0', '0']),
-        //                'first_name' => $my_model->performer->first_name,
-        //                'last_name' => $my_model->performer->last_name,
-        //                'middle_name' => $my_model->performer->middle_name,
-        //                'created_at' => $my_model->created_at,
-        //                'email' => $my_model->performer->email,
-        //                'task_date' => $my_model->task_date,
-        //                'type' => $my_model->type,
-        //                'user_first_name' => $my_model->user->first_name??'',
-        //                'user_last_name' => $my_model->user->last_name??'',
-        //            ];
-        //        }
-        $users = User::select('id', 'first_name')->get();
-        $this_user_id = $user->id;
-        $deals = Deal::where('status', 1)->get();
-        foreach ($deals as $deal) {
-            $deal_[] = [
-                'id' => $deal->id,
-                'first_name' => $deal->client->first_name,
-                'last_name' => $deal->client->last_name,
-                'middle_name' => $deal->client->middle_name,
-            ];
-        }
-        $data = [
-            'tasks' => $tasks,
-            //            'my_tasks' => $my_tasks,
-            'users' => $users,
-            'deals' => $deal_,
-        ];
-        $response = [
-            "status" => true,
-            "message" => "success",
-            "data" => $data
-        ];
-        return response($response);
-    }
-
-    public function indexLeadListNew()
-    {
-
-        $leadStatuses = LeadStatus::all();
-
-        return view('forthebuilder::clients.index-lead-list-new', [
-            'leadStatuses' => $leadStatuses,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
-
-    // public function indexClientList()
-    // {
-    //     $model = Deal::where('status', Constants::ACTIVE)->orderBy('date_deal', 'desc')->get();
-
-    //     $arr = [
-    //         translate('First contact') => [],
-    //         translate('Negotiation') => [],
-    //         translate('Making a deal') => [],
-    //     ];
-
-    //     if (!empty($model)) {
-    //         $n = 0;
-    //         foreach ($model as $key => $value) {
-    //             switch ($value->type) {
-    //                 case Constants::FIRST_CONTACT:
-    //                     $key = translate('First contact');
-    //                     break;
-    //                 case Constants::NEGOTIATION:
-    //                     $key = translate('Negotiation');
-    //                     break;
-    //                 case Constants::MAKE_DEAL:
-    //                     $key = translate('Making a deal');
-    //                     break;
-    //                 default:
-    //                     $key = translate('First contact');
-    //                     break;
-    //             }
-
-    //             $arr[$key]['type'] = $value->type;
-    //             $arr[$key]['list'][$n]['id'] = $value->id;
-    //             $arr[$key]['list'][$n]['responsible'] = (isset($value->user)) ? $value->user->last_name . ' ' . $value->user->first_name . ' ' . $value->user->middle_name : '';
-    //             $arr[$key]['list'][$n]['client'] = (isset($value->client)) ? $value->client->last_name . ' ' . $value->client->first_name . ' ' . $value->client->middle_name : '';
-    //             $arr[$key]['list'][$n]['client_id'] = $value->client->id ?? 0;
-    //             $arr[$key]['list'][$n]['day'] = date('d.m.Y', strtotime($value->date_deal));
-    //             $arr[$key]['list'][$n]['time'] = date('H:i:s', strtotime($value->date_deal));
-    //             $n++;
-    //         }
-    //     }
-
-    //     return view('forthebuilder::clients.index-client-list', [
-    //         'model' => $arr,
-    //     ]);
-    // }
-
-    public function indexNewClients()
-    {
-
-        $lead_status_id = LeadStatus::where('name', 'новый')->first();
-
-        $models = [];
-        if (isset($lead_status_id))
-            $models = Clients::where('lead_status_id', $lead_status_id->id)->paginate(config('params.pagination'));
-
-        return view('forthebuilder::clients.index-new-leads', [
-            'models' => $models,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
-
-    public function getLeadList(Request $request)
-    {
-
-        $lead_status_id = LeadStatus::where('name', 'Пустой')->first();
-
-        if ($request->ajax()) {
-            $models = Clients::where('lead_status_id', $lead_status_id)->paginate(20);
-        }
-
-        return response()->json($models);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     * @return Renderable
-     */
-    public function create()
-    {
-
-        // $models = Clients::all();
-        // $leadStatuses = LeadStatus::all();
-        $request_status = LeadStatus::NEW_STATUS;
-        return view('forthebuilder::clients.create', [
-            // 'models' => $models,
-            'request_status' => $request_status,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     * @param Request $request
-     * @return Renderable
-     */
-
-    public function store(ClientsRequest $request)
-    {
-        $data = $request->validated();
-        $auth_user_id = Auth::user()->id;
-        $client_id = $data['client_id'];
-        if (isset($data['client_id']) && $data['client_id'] != null && $data['client_id'] != 'null') {
-            $existPersonalInfo = PersonalInformations::where(['client_id' => $data['client_id'], 'series_number' => $data['series_number']])->first();
-            if (isset($existPersonalInfo)) {
-                $existClient = Clients::find($data['client_id']);
-                $existClient->first_name = $data['first_name'];
-                $existClient->last_name = $data['last_name'];
-                $existClient->middle_name = $data['middle_name'];
-                $existClient->phone = $data['phone'];
-                $existClient->additional_phone = $data['additional_phone'];
-                $existClient->email = $data['email'];
-                $existClient->source = $data['source'];
-                $existClient->lead_status = $data['lead_status'];
-                $existClient->save();
-                $client_id = $existClient->id;
-            }
-        } else {
-            $newClient = new Clients();
-            $newClient->user_id = $auth_user_id;
-            $newClient->first_name = $data['first_name'];
-            $newClient->last_name = $data['last_name'];
-            $newClient->middle_name = $data['middle_name'];
-            $newClient->phone = $data['phone'];
-            $newClient->additional_phone = $data['additional_phone'];
-            $newClient->email = $data['email'];
-            $newClient->source = $data['source'];
-            $newClient->status = Constants::CLIENT_ACTIVE;
-            $newClient->save();
-
-            $client_id = $newClient->id;
-            if (isset($data['series_number'])) {
-                $newPersonalInfo = new PersonalInformations();
-                $newPersonalInfo->client_id = $newClient->id;
-                $newPersonalInfo->issued_by = $data['issued_by'];
-                $newPersonalInfo->series_number = $data['series_number'];
-                $newPersonalInfo->inn = $data['inn'];
-                $newPersonalInfo->save();
-            }
-        }
-
-        $model = new Deal();
-        $model->user_id = $auth_user_id;
-        $model->client_id = $client_id;
-        $model->date_deal = date('Y-m-d');
-        $model->status = Constants::ACTIVE;
-        $model->type = $data['lead_status'];
-        $model->looking_for = $data['looking_for'];
-        if ($model->save()) {
-            return redirect()->route('forthebuilder.clients.index')->with('success', translate('successfully'));
-        }
-
-
-
-        // // $leads = Clients::all();
-        // // $leads = Clients::where('series_number', str_replace(' ','', $data['series_number']))->first();
-        // // foreach ($leads as $lead){
-        // //     $series_number[] = str_replace(' ','', $lead->series_number);
-        // // }
-        // // if(!isset($leads)){
-        // $model = new Clients();
-        // $model->first_name = $data['first_name'];
-        // $model->last_name = $data['last_name'];
-        // $model->middle_name = $data['middle_name'];
-        // $model->phone = $data['phone'];
-        // $model->additional_phone = $data['additional_phone'];
-        // $model->email = $data['email'];
-        // $model->source = $data['source'];
-        // $model->lead_status = $data['lead_status'];
-        // $model->issued_by = $data['issued_by'];
-        // $model->inn = str_replace(' ', '', $data['inn']);
-        // // $model->referer = $data['referer'];
-        // // $model->created_at = $data['created_at'];
-        // // $model->requestid = $data['requestid'];
-        // // $model->lead_status_id = $data['lead_status_id'];
-        // $model->user_id = Auth::user()->id;
-        // if ($model->save()) {
-        //     Log::channel('action_logs2')->info("пользователь создал новую Лиды : " . $model->name . "", ['info-data' => $model]);
-
-        //     return redirect()->route('forthebuilder.clients.index')->with('success', translate('successfully'));
-        // }
-        // }else{
-
-        $leadStatuses = LeadStatus::all();
-        return view('forthebuilder::clients.create', [
-            'leadStatuses' => $leadStatuses,
-            'data' => $data,
-        ])->with('warning', translate('This lead is exist'));
-
-        // $model = Clients::where('series_number', str_replace(' ','', $data['series_number']))->first();
-        // return redirect()->route('forthebuilder.clients.create', $leads->id)->with('warning', translate('This lead is exist'));
-        // }
-    }
-    public function clientHouse($client_id)
-    {
-
-        $models = House::orderBy('id', 'desc')->paginate(config('params.pagination'));
-        return view('forthebuilder::house.index', [
-            'models' => $models,
-            'status' => 'client',
-            'client_id' => $client_id,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
-    public function clientHouseFlat($id, $client_id)
-    {
-
-        $model = House::findOrFail($id);
-        $flats = HouseFlat::select('id', 'floor', 'entrance', 'status', 'number_of_flat', 'price', 'areas', 'room_count')->where('house_id', $model->id)->orderBy('entrance', 'asc')->orderBy('floor', 'desc')->orderBy('created_at', 'asc')->get();
-        $statusColors = StatusColors::select('id', 'color', 'status')->get();
-        $arr = [];
-        $i_default = ($model->has_basement) ? 0 : 1;
-        $j_default = ($model->has_attic) ? $model->floor_count + 1 : $model->floor_count;
-        // dd($j_default);
-        for ($i = 1; $i <= $model->entrance_count; $i++) {
-            for ($j = $j_default; $j >= $i_default; $j--) {
-                $f_j = $j;
-                // echo $j . '>' . $model->floor_count . '<br>';
-                if ($j > $model->floor_count)
-                    $f_j = translate('attic');
-
-                if ($j == 0)
-                    $f_j = translate('basement');
-
-                $arr['list'][$i]['list'][$f_j] = [];
-                $arr['entrance_count'][$f_j] = $f_j;
-            }
-        }
-
-        // for ($i = 1; $i <= $model->entrance_count; $i++)
-        //     for ($j = $model->floor_count; $j >= 1; $j--)
-        //         $arr['list'][$i]['list'][$j] = [];
-
-        $count_all = 0;
-        $count_bookings = 0;
-        $count_free = 0;
-        $count_solds = 0;
-
-        $entrance_all = 0;
-        $entrance_bookings = 0;
-        $entrance_free = 0;
-        $entrance_solds = 0;
-
-        $entranceArr = [];
-        $floorArr = [];
-        $n = 0;
-
-        $model->entrance_count;
-        $model->floor_count;
-        // $entrance_count = 0;
-        // $floor_count = 0;
-        // pre($flats);
-        foreach ($flats as $val) {
-            $count_all++;
-            if ($val->status == HouseFlat::STATUS_BOOKING)
-                $count_bookings++;
-            else if ($val->status == HouseFlat::STATUS_FREE)
-                $count_free++;
-            else if ($val->status == HouseFlat::STATUS_SOLD)
-                $count_solds++;
-
-            if (!in_array($val->entrance, $entranceArr)) {
-                $entranceArr[] = $val->entrance;
-                $entrance_all = 0;
-                $entrance_bookings = 0;
-                $entrance_free = 0;
-                $entrance_solds = 0;
-            }
-
-            $entrance_all++;
-            if ($val->status == HouseFlat::STATUS_BOOKING)
-                $entrance_bookings++;
-            else if ($val->status == HouseFlat::STATUS_FREE)
-                $entrance_free++;
-            else if ($val->status == HouseFlat::STATUS_SOLD)
-                $entrance_solds++;
-
-            if (!in_array($val->floor, $floorArr)) {
-                $floorArr[] = $val->floor;
-                $n = 0;
-            }
-
-            $f_j = $val->floor;
-            if ($val->floor > $model->floor_count)
-                $f_j = translate('attic');
-
-            if ($val->floor == 0)
-                $f_j = translate('basement');
-
-            $arr['list'][$val->entrance]['entrance_all'] = $entrance_all;
-            $arr['list'][$val->entrance]['entrance_bookings'] = $entrance_bookings;
-            $arr['list'][$val->entrance]['entrance_free'] = $entrance_free;
-            $arr['list'][$val->entrance]['entrance_solds'] = $entrance_solds;
-            $arr['list'][$val->entrance]['entrance'] = $val->entrance;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['id'] = $val->id;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['color_status'] = $val->status;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['number_of_flat'] = $val->number_of_flat;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['areas'] = $val->areas;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['price'] = $val->price;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['contract_number'] = $val->contract_number;
-            $arr['list'][$val->entrance]['list'][$f_j][$n]['room_count'] = $val->room_count;
-
-            $n++;
-        }
-
-        $arr['count_all'] = $count_all;
-        $arr['count_bookings'] = $count_bookings;
-        $arr['count_free'] = $count_free;
-        $arr['count_solds'] = $count_solds;
-        // pre($flats);
-
-        $colors = [];
-        if (!empty($statusColors)) {
-            foreach ($statusColors as $value) {
-                $colors[$value->status] = $value->color;
-            }
-        }
-        // pre($arr);
-        // return view('forthebuilder::house.show-more-second', [
-        return view('forthebuilder::house.show-more', [
-            'model' => $model,
-            'flats' => $flats,
-            'arr' => $arr,
-            'colors' => $colors,
-            'status' => 'client',
-            'client_id' => $client_id,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
-    public function showDetails($house_id, $entrance, $flat_id, $client_id)
-    {
-
-        $model = House::findOrFail($house_id);
-        $flats = HouseFlat::select('id', 'floor', 'entrance', 'status', 'number_of_flat', 'price', 'areas', 'room_count', 'house_id', 'doc_number')->where(['house_id' => $model->id, 'entrance' => $entrance])->orderBy('entrance', 'asc')->orderBy('floor', 'desc')->get();
-        $statusColors = StatusColors::select('id', 'color', 'status')->get();
-        $arr = [];
-        // for ($i = 1; $i <= $model->entrance_count; $i++)
-        //     for ($j = $model->floor_count; $j >= 1; $j--)
-        //         $arr['list'][$i]['list'][$j] = [];
-
-        $count_all = 0;
-        $count_bookings = 0;
-        $count_free = 0;
-        $count_solds = 0;
-
-        $entrance_all = 0;
-        $entrance_bookings = 0;
-        $entrance_free = 0;
-        $entrance_solds = 0;
-
-        $entranceArr = [];
-        $floorArr = [];
-        $n = 0;
-
-        $model->entrance_count;
-        $model->floor_count;
-        // $entrance_count = 0;
-        // $floor_count = 0;
-        // pre($flats);
-        foreach ($flats as $val) {
-            $count_all++;
-            if ($val->status == HouseFlat::STATUS_BOOKING)
-                $count_bookings++;
-            else if ($val->status == HouseFlat::STATUS_FREE)
-                $count_free++;
-            else if ($val->status == HouseFlat::STATUS_SOLD)
-                $count_solds++;
-
-            if (!in_array($val->entrance, $entranceArr)) {
-                $entranceArr[] = $val->entrance;
-                $entrance_all = 0;
-                $entrance_bookings = 0;
-                $entrance_free = 0;
-                $entrance_solds = 0;
-            }
-
-            $entrance_all++;
-            if ($val->status == HouseFlat::STATUS_BOOKING)
-                $entrance_bookings++;
-            else if ($val->status == HouseFlat::STATUS_FREE)
-                $entrance_free++;
-            else if ($val->status == HouseFlat::STATUS_SOLD)
-                $entrance_solds++;
-
-            if (!in_array($val->floor, $floorArr)) {
-                $floorArr[] = $val->floor;
-                $n = 0;
-            }
-
-            $f_j = $val->floor;
-            if ($val->floor > $model->floor_count)
-                $f_j = translate('attic');
-
-            if ($val->floor == 0)
-                $f_j = translate('basement');
-
-            $areas = json_decode($val->areas);
-            // pre($areas->total);
-            $arr['entrance_all'] = $entrance_all;
-            $arr['entrance_bookings'] = $entrance_bookings;
-            $arr['entrance_free'] = $entrance_free;
-            $arr['entrance_solds'] = $entrance_solds;
-            $arr['entrance'] = $val->entrance;
-            $arr['list'][$f_j][$n]['id'] = $val->id;
-            $arr['list'][$f_j][$n]['house_id'] = $val->house_id;
-            $arr['list'][$f_j][$n]['house_house_name'] = $model->name;
-            $arr['list'][$f_j][$n]['doc_number'] = $val->doc_number;
-            $arr['list'][$f_j][$n]['color_status'] = $val->status;
-            $arr['list'][$f_j][$n]['number_of_flat'] = $val->number_of_flat;
-            $arr['list'][$f_j][$n]['areas'] = $areas->total;
-            $arr['list'][$f_j][$n]['price'] = $val->price;
-            $arr['list'][$f_j][$n]['contract_number'] = $val->contract_number;
-            $arr['list'][$f_j][$n]['room_count'] = $val->room_count;
-            $arr['list'][$f_j][$n]['client'] = '';
-            if ($val->status == Constants::STATUS_BOOKING) {
-                $arr['list'][$f_j][$n]['client'] = (isset($val->booking->clients)) ? $val->booking->clients->last_name . ' ' . $val->booking->clients->first_name . ' ' . $val->booking->clients->middle_name : '';
-            } else if ($val->status == Constants::STATUS_SOLD) {
-                $arr['list'][$f_j][$n]['client'] = (isset($val->deal->client)) ? $val->deal->client->last_name . ' ' . $val->deal->client->first_name . ' ' . $val->deal->client->middle_name : '';
-            }
-            $arr['list'][$f_j][$n]['floor'] = $val->floor;
-
-            // [$val->entrance]
-
-            $n++;
-        }
-
-        $arr['count_all'] = $count_all;
-        $arr['count_bookings'] = $count_bookings;
-        $arr['count_free'] = $count_free;
-        $arr['count_solds'] = $count_solds;
-
-        $colors = [];
-        if (!empty($statusColors))
-            foreach ($statusColors as $value)
-                $colors[$value->status] = $value->color;
-
-        // pre($arr);
-        return view('forthebuilder::house.show-details', [
-            'model' => $model,
-            'flats' => $flats,
-            'arr' => $arr,
-            'colors' => $colors,
-            'status' => 'client',
-            'client_id' => $client_id,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
-    public function storeBudget(Request $request, $client_id)
-    {
-        $user = Auth::user();
-        $model = Deal::find($request->deal_id);
-        date_default_timezone_set("Asia/Tashkent");
-        if (isset($request->budget)) {
-            $model->budget = (float)$request->budget;
-        }
-        if (isset($request->looking_for)) {
-            $model->looking_for = $request->looking_for;
-        }
-        if (isset($request->house_id)) {
-            $model->house_id = $request->house_id;
-        }
-        if (isset($request->house_flat_id)) {
-            $model->house_flat_id = $request->house_flat_id;
-        }
-        if ($model->history == NULL) {
-            $model->history = json_encode([['date' => date('Y-m-d H:i:s'), 'user' => $user->first_name, 'user_id' => $user->id, 'user_photo' => $user->avatar, 'new_type' => $request->type, 'old_type' => $model->type]]);
-        } else {
-            $old_history = json_decode($model->history);
-            $old_history[] = ['date' => date('Y-m-d H:i:s'), 'user' => $user->first_name, 'user_id' => $user->id,  'user_photo' => $user->avatar, 'new_type' => $request->type, 'old_type' => $model->type];
-            $model->history = json_encode($old_history);
-        }
-        $model->type = $request->type;
-        if (isset($request->series_number) || isset($request->issued_by) || isset($request->inn)) {
-            if (isset($request->personal_id)) {
-                $personal = PersonalInformations::find($request->personal_id);
-                $personal->series_number = $request->series_number;
-                $personal->issued_by = $request->issued_by;
-                $personal->inn = $request->inn;
-            } else {
-                $personal = new PersonalInformations();
-                $personal->series_number = $request->series_number;
-                $personal->issued_by = $request->issued_by;
-                $personal->inn = $request->inn;
-                $personal->client_id = $client_id;
-            }
-            $personal->save();
-        }
         $model->save();
-        return redirect()->route('forthebuilder.clients.show', [$model->client_id, "0", "0"])->with('status', translate('successfully'));
-    }
 
-    /**
-     * Show the specified resource.
-     * @param int $id
-     * @return Renderable
-     */
-    public function taskAnswer()
-    {
-        $model = Task::find();
-    }
-
-    public function show($id, $house_flat_id = 0, $task_id = 0)
-    {
-
-        // $model = Clients::findOrFail($id);
-        // $modelDeals = Deal::where('client_id', $model->id)->get();
-
-        $data = DB::table('forthebuilder.clients as c')
-            ->leftJoin('forthebuilder.deals as d', 'd.client_id', '=', 'c.id')
-            //            ->leftJoin('forthebuilder.task as t', 't.deal_id', '=', 'd.id')
-            ->leftJoin('forthebuilder.house as h', 'd.house_id', '=', 'h.id')
-            ->leftJoin('forthebuilder.house_flat as h_f', 'd.house_flat_id', '=', 'h_f.id')
-            ->leftJoin('forthebuilder.personal_informations as pi', 'c.id', '=', 'pi.client_id')
-            ->leftJoin('newhouse.users as nu', 'nu.id', '=', 'd.user_id')
-            ->where('c.id', $id)
-            ->select(
-                'c.id AS client_id',
-                'c.first_name',
-                'c.last_name',
-                'c.middle_name',
-                'c.phone',
-                'c.additional_phone',
-                'c.email',
-                'c.gender',
-                'c.status',
-                'd.type',
-                'd.status AS deal_status',
-                'd.id AS deal_id',
-                'd.budget AS budget',
-                'd.looking_for AS looking_for',
-                'd.history AS history',
-                'h.name AS house_name',
-                'h_f.number_of_flat AS flat_number',
-                'h_f.entrance AS flat_entrance',
-                'h_f.areas AS flat_area',
-                'nu.id AS user_id',
-                'nu.first_name AS userFirstName',
-                'nu.last_name AS userLastName',
-                'nu.middle_name AS userMiddleName',
-                'nu.email AS userEmail',
-                'pi.id AS personal_id',
-                'pi.series_number',
-                'pi.inn',
-                'pi.issued_by',
-                'pi.given_date',
-                'pi.address'
-            )->get();
-        // pre($data);
-        //        dd($data);
-        foreach ($data as $dat) {
-            $task_array[] = $dat->deal_id;
-        }
-        $tasks = Task::select('id', 'performer_id', 'title', 'deal_id', 'type', 'task_date', 'answer', 'created_at')->whereIn('deal_id', $task_array)->get();
-        $chats = Chat::whereIn('deal_id', $task_array)->get();
-        if ($house_flat_id != '0') {
-            $house_flat = HouseFlat::findOrFail($house_flat_id);
-        } else {
-            $house_flat = "";
-        }
-        $time = date('Y-m-d');
-
-        if ($task_id != 0) {
-            $task = Notification_::where('notifiable_id', $task_id)->first();
-            $task->read_at = $time;
-            $task->save();
-        }
-        $users = User::all();
-        $client = Clients::find($id);
-        // $comments = LeadComment::where('lead_id', $id)->get();
-        // $leadStatuses = LeadStatus::all();
-        // $deals = Deal::where('series_number', $model->series_number)->get();
-        // $all_deal_id = [];
-        // foreach ($deals as $deal) {
-        //     $all_deal_id[] = $deal->id;
-        // }
-        // $personalinfo = PersonalInformations::where('series_number', $model->series_number)->first();
-        // if (count($all_deal_id) > 0) {
-        //     $installmentplans = InstallmentPlan::whereIn('deal_id', $all_deal_id)->get();
-        // }
-        // $users = User::all();
-
-        // $listTasks = Task::where('lead_id', $id)->orderBy('id', 'desc')->paginate(config('params.pagination'));
-
-        return view('forthebuilder::clients.show', [
-            // 'model' => $model,
-            // 'modelDeals' => $modelDeals,
-            'data' => $data,
-            'house_flat' => $house_flat,
-            'users' => $users,
-            'tasks' => $tasks,
-            'client' => $client,
-            'chats' => $chats,
-            'all_notifications' => $this->getNotification()
-            // 'leadStatuses' => $leadStatuses,
-            // 'personalinfo' => $personalinfo,
-            // 'installmentplans' => $installmentplans ?? [],
-            // 'deals' => $deals ?? [],
-            // 'users' => $users,
-            // 'listTasks' => $listTasks,
-        ]);
-    }
-
-    // /**
-    //  * Show the specified resource.
-    //  * @param int $id
-    //  * @return Renderable
-    //  */
-    // public function show($id)
-    // {
-    //     $model = Clients::findOrFail($id);
-    //     $comments = LeadComment::where('lead_id', $id)->get();
-    //     $leadStatuses = LeadStatus::all();
-    //     $deals = Deal::where('series_number', $model->series_number)->get();
-    //     $all_deal_id = [];
-    //     foreach ($deals as $deal) {
-    //         $all_deal_id[] = $deal->id;
-    //     }
-    //     $personalinfo = PersonalInformations::where('series_number', $model->series_number)->first();
-    //     if (count($all_deal_id) > 0) {
-    //         $installmentplans = InstallmentPlan::whereIn('deal_id', $all_deal_id)->get();
-    //     }
-    //     $users = User::all();
-
-    //     $listTasks = Task::where('lead_id', $id)->orderBy('id', 'desc')->paginate(config('params.pagination'));
-
-    //     return view('forthebuilder::clients.show', [
-    //         'model' => $model,
-    //         'comments' => $comments,
-    //         'leadStatuses' => $leadStatuses,
-    //         'personalinfo' => $personalinfo,
-    //         'installmentplans' => $installmentplans ?? [],
-    //         'deals' => $deals ?? [],
-    //         'users' => $users,
-    //         'listTasks' => $listTasks,
-    //     ]);
-    // }
-
-    /**
-     * Show the form for editing the specified resource.
-     * @param int $id
-     * @return Renderable
-     */
-    public function edit($id)
-    {
-
-        $model = Clients::findOrFail($id);
-        $leadStatuses = LeadStatus::all();
-        return view('forthebuilder::clients.edit', [
-            'model' => $model,
-            'leadStatuses' => $leadStatuses,
-            'all_notifications' => $this->getNotification()
-        ]);
+        $response = ['status' => true, 'message' => 'Success', 'id' => $client_id];
+        return response($response);
     }
 
     /**
@@ -974,70 +206,49 @@ class ClientsController extends Controller
      * @param int $id
      * @return Renderable
      */
-    public function update(ClientsRequest $request, $id)
+    public function update(ClientsRequest $request)
     {
         $data = $request->validated();
 
-        $model = Clients::find($id);
+        $model = Clients::find($data['id']);
         $model->first_name = $data['first_name'];
         $model->last_name = $data['last_name'];
         $model->middle_name = $data['middle_name'];
         $model->phone = $data['phone'];
-        $model->additional_phone = $data['additional_phone'];
+        $model->additional_phone = $data['additional_phone_number'];
         $model->email = $data['email'];
         $model->source = $data['source'];
-        $model->lead_status = $data['lead_status'];
         $model->save();
 
-        Log::channel('action_logs2')->info("пользователь обновил " . $model->first_name . " Клиент", ['info-data' => $model]);
-
-        return redirect()->route('forthebuilder.clients.index')->with('success', translate('successfully'));
+        $response = ['status' => true, 'message' => 'Success', 'id' => $model->id];
+        return response($response);
     }
-
-    // public function updateType(Request $request, $id)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'type' => 'required|integer',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return redirect()->route('forthebuilder.client-lists.indexClientList')->withErrors($validator);
-    //     }
-
-    //     if ($request->ajax()) {
-    //         $model = Deal::findOrFail($id);
-    //         $model->type = $request->type;
-    //         $model->save();
-
-    //         $mStatus = Deal::select('type', DB::raw('count(*) as total'))
-    //             ->groupBy('type')
-    //             ->pluck('total', 'type')
-    //             ->toArray();
-    //         //            $leadstatus = LeadStatus::all();
-    //         //            $mStatus = $leadstatus->leads->count();
-    //         return response()->json([
-    //             'mStatus' => $mStatus,
-    //             'success' => 'Статус измeнён'
-    //         ]);
-    //     }
-    // }
 
     /**
      * Remove the specified resource from storage.
      * @param int $id
      * @return Renderable
      */
-    public function destroy($id)
+    public function delete(Request $request)
     {
+        $id = $request['id'];
         DB::beginTransaction();
         try {
-            $leads = Clients::findOrFail($id);
+            $response = ['status' => false, 'message' => ''];
+
+            $leads = Clients::where(['id' => $id, 'status' => Constants::CLIENT_ACTIVE])->first();
+            if (!isset($leads)) {
+                $response['message'] = 'This client is not active';
+                return response($response);
+            }
             $leads->status = Constants::CLIENT_DELETED;
 
             $deals = Deal::select('id', 'client_id')->where('client_id', $id);
             $activeDeals = $deals->whereIn('status', [Constants::ACTIVE, Constants::NOT_IMPLEMENTED])->where('type', Constants::MAKE_DEAL)->first();
-            if (isset($activeDeals) && !empty($activeDeals))
-                return redirect()->route('forthebuilder.clients.index')->with('delete_warning', translate('The client has active deals'));
+            if (isset($activeDeals) && !empty($activeDeals)) {
+                $response['message'] = 'The client has active deals';
+                return response($response);
+            }
 
             $deals = $deals->get();
             $deal_id = [];
@@ -1049,8 +260,10 @@ class ClientsController extends Controller
             }
 
             $payStatus = PayStatus::whereIn('deal_id', $deal_id)->whereIn('status', [Constants::NOT_PAID, Constants::HALF_PAY])->first();
-            if (isset($payStatus) && !empty($payStatus))
-                return redirect()->route('forthebuilder.clients.index')->with('delete_warning', translate('The client has active installment plan'));
+            if (isset($payStatus) && !empty($payStatus)) {
+                $response['message'] = 'The client has active installment plan';
+                return response($response);
+            }
 
             $tasks = Task::whereIn('deal_id', $deal_id)->get();
             foreach ($tasks as $task) {
@@ -1061,8 +274,10 @@ class ClientsController extends Controller
 
             $bookings = Booking::whereIn('deal_id', $deal_id);
             $issetBooking = $bookings->where('status', Constants::BOOKING_ACTIVE)->first();
-            if (isset($issetBooking))
-                return redirect()->route('forthebuilder.clients.index')->with('delete_warning', translate('The client has active bookings'));
+            if (isset($issetBooking)) {
+                $response['message'] = 'The client has active bookings';
+                return response($response);
+            }
 
             $bookings = $bookings->where('status', Constants::BOOKING_ACTIVE)->get();
             foreach ($bookings as $booking) {
@@ -1078,46 +293,212 @@ class ClientsController extends Controller
             }
             $leads->save();
 
-            Log::channel('action_logs2')->info("пользователь удалил " . $leads->name . " Лиды", ['info-data' => $leads]);
+            // Log::channel('action_logs2')->info("пользователь удалил " . $leads->name . " Лиды", ['info-data' => $leads]);
             DB::commit();
-            return redirect()->route('forthebuilder.clients.index')->with('deleted', translate('Data deleted successfuly'));
+            $response['status'] = true;
+            $response['message'] = 'Data deleted successfuly';
+            return response($response);
         } catch (\Exception $e) {
             DB::rollback();
             return $e->getMessage();
         }
     }
 
-    public function import(Request $request)
+    public function show(Request $request)
     {
-        $request->validate(
-            [
-                'lead_file' => 'required'
-            ],
-            // ['lead_file.required' => 'this is my custom error message for required']
-        );
-        // dd($request->file('lead_file'));
-        Excel::import(new LeadsImport, $request->file('lead_file'));
+        $id = $request->id;
+        $model = Clients::findOrFail($id);
 
-        return back()->with('success', 'Success!');
+        $sqlQuery = "
+            SELECT
+                h.name, h.corpus, hf.number_of_flat, hf.`floor`, hf.entrance, hf.room_count, T.*
+            FROM (
+                SELECT
+                    t.id, d.id AS deal_id, d.status AS deal_status, d.type AS deal_type, d.budget, d.looking_for, d.house_flat_id, d.house_id, c.id AS client_id, t.created_at AS created_at, CAST(t.title AS CHAR) AS text, c.last_name, c.first_name, c.middle_name,
+                    '' AS old_type, '' AS new_type, '' as image,
+                    'task' AS status
+                FROM deals AS d
+                INNER JOIN clients AS c ON c.id = d.client_id
+                INNER JOIN task AS t ON t.deal_id = d.id
+                WHERE d.client_id = " . $id . "
+
+                UNION
+
+                SELECT
+                    ch.id, d.id AS deal_id, d.status AS deal_status, d.type AS deal_type, d.budget, d.looking_for, d.house_flat_id, d.house_id, c.id AS client_id, ch.created_at AS created_at, CAST(ch.text AS CHAR) AS text, c.last_name, c.first_name, c.middle_name,
+                    '' AS old_type, '' AS new_type, '' as image,
+                    'chat' AS status
+                FROM deals AS d
+                INNER JOIN clients AS c ON c.id = d.client_id
+                INNER JOIN chat AS ch ON ch.deal_id = d.id
+                WHERE d.client_id = " . $id . "
+
+                UNION
+
+                SELECT
+                    d.id, d.id AS deal_id, d.status AS deal_status, d.type AS deal_type, d.budget, d.looking_for, d.house_flat_id, d.house_id, c.id AS client_id,
+                    JSON_UNQUOTE(JSON_EXTRACT(d.history, CONCAT('$[', pseudo_rows.row, '].date'))) AS created_at,
+                    '' AS text, c.last_name, c.first_name, c.middle_name,
+                    JSON_UNQUOTE(JSON_EXTRACT(d.history, CONCAT('$[', pseudo_rows.row, '].old_type'))) AS old_type,
+                    JSON_UNQUOTE(JSON_EXTRACT(d.history, CONCAT('$[', pseudo_rows.row, '].new_type'))) AS new_type,
+                    JSON_UNQUOTE(JSON_EXTRACT(d.history, CONCAT('$[', pseudo_rows.row, '].user_photo'))) AS image,
+                    'history' AS STATUS
+                FROM deals AS d
+                INNER JOIN clients AS c
+                JOIN pseudo_rows
+                WHERE c.id = " . $id . "
+                HAVING old_type IS NOT NULL
+            ) AS T
+            LEFT JOIN house_flat AS hf ON hf.id = T.house_flat_id
+            LEFT JOIN house AS h ON h.id = T.house_id
+            -- LEFT JOIN deals_files AS df ON df.deal_id = T.deal_id
+            ORDER BY T.deal_id, T.created_at ASC
+            ";
+
+        $results = DB::select($sqlQuery);
+
+        $arr = [];
+        if (isset($results) && !empty($results)) {
+            $n = -1;
+            $h = 0;
+            $d = -1;
+            $has = [];
+            $hasDate = [];
+            $default = true;
+            foreach ($results as $key => $value) {
+                // return $value->deal_id;
+                if (!in_array($value->deal_id, $has)) {
+                    $has[] = $value->deal_id;
+                    $n++;
+                    $d = -1;
+                    $default = true;
+                }
+
+                if (!in_array(date('Y-m-d', strtotime($value->created_at)) . $value->deal_id, $hasDate)) {
+                    $hasDate[] = date('Y-m-d', strtotime($value->created_at)) . $value->deal_id;
+                    $h = 0;
+                    $d++;
+                }
+
+                $arr['id'] = $model->id;
+                $arr['user_last_name'] = $model->user ? $model->user->last_name : '';
+                $arr['user_first_name'] = $model->user ? $model->user->first_name : '';
+                $arr['user_middle_name'] = $model->user ? $model->user->middle_name : '';
+                $arr['client_last_name'] = $model->last_name;
+                $arr['client_first_name'] = $model->first_name;
+                $arr['client_middle_name'] = $model->middle_name;
+                $arr['phone'] = $model->phone;
+                $arr['email'] = $model->email;
+
+                $type = '';
+                if ($value->deal_type == Constants::FIRST_CONTACT)
+                    $type = 'Первый контакт';
+                else if ($value->deal_type == Constants::NEGOTIATION)
+                    $type = 'Переговоры';
+                else if ($value->deal_type == Constants::MAKE_DEAL)
+                    $type = 'Оформление сделки';
+
+                $arr['deals'][$n]['deal_id'] = $value->deal_id;
+                $arr['deals'][$n]['status'] = $type;
+                $arr['deals'][$n]['budget'] = $value->budget;
+                $arr['deals'][$n]['looking_for'] = $value->looking_for;
+                $arr['deals'][$n]['interested'] = $value->name . ' ' . $value->corpus . ': Подъезд' . $value->entrance . ': ' . $value->number_of_flat . 'кв';
+                $arr['deals'][$n]['images'] = [];
+
+                if ($default) {
+                    $default = false;
+                    $arr['deals'][$n]['history'][$d]['date'] = date('Y-m-d', strtotime($model->created_at));
+                    // return $arr;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['status'] = 'default';
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['id'] = $model->id;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['created_at'] = date('Y-m-d H:i:s', strtotime($model->created_at));
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['client_last_name'] = $model->last_name;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['client_first_name'] = $model->first_name;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['client_middle_name'] = $model->middle_name;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['user_last_name'] = $model->user ? $model->user->last_name : '';
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['user_first_name'] = $model->user ? $model->user->first_name : '';
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['user_middle_name'] = $model->user ? $model->user->middle_name : '';
+                    $h++;
+                    $d++;
+                }
+
+                if (date('Y-m-d', strtotime($model->created_at)) != date('Y-m-d', strtotime($value->created_at)))
+                    $arr['deals'][$n]['history'][$d]['date'] = date('Y-m-d', strtotime($value->created_at));
+                else
+                    $d--;
+
+                if ($value->status == 'chat' || $value->status == 'task') {
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['status'] = $value->status;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['id'] = $value->id;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['created_at'] = date('Y-m-d H:i:s', strtotime($value->created_at));
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['text'] = $value->text;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['last_name'] = $value->last_name;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['first_name'] = $value->first_name;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['middle_name'] = $value->middle_name;
+                }
+
+                if ($value->status == 'history') {
+                    $historyOldType = 'Первый контакт';
+                    if ($value->old_type == Constants::FIRST_CONTACT)
+                        $historyOldType = 'Первый контакт';
+                    else if ($value->old_type == Constants::NEGOTIATION)
+                        $historyOldType = 'Переговоры';
+                    else if ($value->old_type == Constants::MAKE_DEAL)
+                        $historyOldType = 'Оформление сделки';
+
+                    $historyNewType = 'Первый контакт';
+                    if ($value->new_type == Constants::FIRST_CONTACT)
+                        $historyNewType = 'Первый контакт';
+                    else if ($value->new_type == Constants::NEGOTIATION)
+                        $historyNewType = 'Переговоры';
+                    else if ($value->new_type == Constants::MAKE_DEAL)
+                        $historyNewType = 'Оформление сделки';
+
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['status'] = $value->status;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['created_at'] = date('Y-m-d H:i:s', strtotime($value->created_at));
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['last_name'] = $value->last_name;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['first_name'] = $value->first_name;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['middle_name'] = $value->middle_name;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['image'] = $value->image;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['old_type'] = $historyOldType;
+                    $arr['deals'][$n]['history'][$d]['list'][$h]['list']['new_type'] = $historyNewType;
+                }
+
+                $h++;
+            }
+        }
+
+        $responce = ['status' => true, 'message' => 'success', 'data' => $arr];
+        return response($responce);
     }
 
-    public function addTask(TaskRequest $request)
+    public function calendar()
     {
-        $data = $request->validated();
-        $data['status'] = 'Новый';
-        $data['user_id'] = Auth::user()->id;
-        $title = $data['title'];
-
-        $model = Task::create($data);
-        Log::channel('action_logs2')->info("пользователь создал новую Task : " . $model->title . "", ['info-data' => $model]);
-
-        $userIdTask = User::findOrFail($data['user_task_id']);
-
-        event(new RealTimeMessage($title, $userIdTask));
-        Notification::send($userIdTask, new TaskNotification($model));
-
-        return redirect()->route('forthebuilder.clients.show', ['id' => $data['lead_id'], "0", "0"]);
-
-        // return redirect()->route('forthebuilder.clients.show')->with('success', translate('successfully'));
+        $user = Auth::user();
+        $models = Task::where('deleted_at', NULL)->get();
+        foreach ($models as $model) {
+            $tasks[] = [
+                'id' => $model->id,
+                // 'href' => route('clients.show', [$model->deal->client->id, '0', '0']),
+                'client_first_name' => $model->performer->first_name,
+                'client_last_name' => $model->performer->last_name,
+                'client_middle_name' => $model->performer->middle_name,
+                'date' => $model->created_at,
+                'email' => $model->performer->email,
+                'task_date' => $model->task_date,
+                'type' => $model->type,
+                'user_id' => $model->user->id ?? '',
+                'user_first_name' => $model->user->first_name ?? '',
+                'user_last_name' => $model->user->last_name ?? '',
+                'user_middle_name' => $model->user->middle_name ?? '',
+            ];
+        }
+        // $this_user_id = $user->id;
+        $response = [
+            "status" => true,
+            "message" => "success",
+            "data" => $tasks
+        ];
+        return response($response);
     }
 }
