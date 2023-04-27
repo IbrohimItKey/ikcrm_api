@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForTheBuilderController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\UserController;
 use App\Models\House;
 use Illuminate\Http\Request;
@@ -71,13 +72,21 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::group(['prefix' => 'language'], function () {
         Route::get('/index', [LanguageController::class, 'index']);
-        Route::get('/edit', [LanguageController::class, 'languageEdit']);
-
         Route::match(['get', 'post'],'/create',[LanguageController::class, 'store']);
-
+        Route::get('/edit', [LanguageController::class, 'languageEdit']);
+        Route::get('/innershow', [LanguageController::class, 'innershow']);
+        Route::post('/translation/save', [LanguageController::class, 'translation_save']);
         Route::post('/update', [LanguageController::class, 'update']);
         Route::post('/delete', [LanguageController::class, 'languageDestroy']);
         // Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
+    });
+    Route::group(['prefix' => 'currency'], function () {
+        Route::get('/index', [CurrencyController::class, 'index']);
+        Route::post('/update', [CurrencyController::class, 'update']);
+        // Route::get('/show', [BookingController::class, 'show']);
+        // Route::post('/insert', [BookingController::class, 'store']);
+        // Route::post('/show/status/update', [BookingController::class, 'statusUpdate']);
 
     });
-});
+
+}); 
