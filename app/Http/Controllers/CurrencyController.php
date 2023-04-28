@@ -25,6 +25,19 @@ class CurrencyController extends Controller
     public function index()
     {
         $model = Currency::first();
+
+
+
+        return response([
+            'status' => true,
+            'message' => 'success',
+            'data'=>$model
+        ]);
+
+
+
+
+
         return view('forthebuilder::currency.index')->with([
             'model' => $model,
             'all_notifications' => $this->getNotification()
@@ -48,17 +61,18 @@ class CurrencyController extends Controller
      * Show the form for creating a new resource.
      * @return Renderable
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        $model = Currency::findOrFail($id);
-        if ($request->attr == 'USD')
-            $model->USD = $request->val;
-        else
-            $model->SUM = $request->val;
+        $model = Currency::findOrFail($request->id);
+        $model->USD = $request->usd_val;
+        $model->SUM = $request->sum_val;
 
         $model->save();
 
-        return true;
+        return response([
+            'status' => true,
+            'message' => 'success',
+        ]);
     }
 
     /**
