@@ -275,7 +275,7 @@ class UserController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/user/edit/{id}",
+     *     path="/api/user/edit/15",
      *     tags={"User"},
      *     summary="User edit",
      *     description="User edit",

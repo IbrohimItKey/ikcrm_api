@@ -1066,7 +1066,7 @@
                 ]
             }
         },
-        "/api/user/edit/{id}": {
+        "/api/user/edit/15": {
             "get": {
                 "tags": [
                     "User"
