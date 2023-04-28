@@ -281,7 +281,6 @@ class ClientsController extends Controller
         //                'user_last_name' => $my_model->user->last_name??'',
         //            ];
         //        }
-        $users = User::select('id', 'first_name')->get();
         $this_user_id = $user->id;
         $deals = Deal::where('status', 1)->get();
         foreach ($deals as $deal) {
@@ -292,18 +291,40 @@ class ClientsController extends Controller
                 'middle_name' => $deal->client->middle_name,
             ];
         }
-        $data = [
-            'tasks' => $tasks,
-            //            'my_tasks' => $my_tasks,
-            'users' => $users,
-            'deals' => $deal_,
-        ];
         $response = [
             "status" => true,
             "message" => "success",
-            "data" => $data
+            "data" => $tasks
         ];
         return response($response);
+    }
+
+    public function getUsers(){
+        $users = User::select('id', 'first_name')->get();
+        $response = [
+            "status" => true,
+            "message" => "success",
+            'data' => $users,
+        ];
+        return $response;
+    }
+
+    public function getDeals(){
+        $deals = Deal::where('status', 1)->get();
+        foreach ($deals as $deal) {
+            $deal_[] = [
+                'id' => $deal->id,
+                'first_name' => $deal->client->first_name,
+                'last_name' => $deal->client->last_name,
+                'middle_name' => $deal->client->middle_name,
+            ];
+        }
+        $response = [
+            "status" => true,
+            "message" => "success",
+            'data' => $deal_,
+        ];
+        return $response;
     }
 
     public function indexLeadListNew()

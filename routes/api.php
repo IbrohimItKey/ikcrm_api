@@ -39,16 +39,22 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/insert', [ClientsController::class, 'insert']);
         Route::get('/show', [ClientsController::class, 'show'])->name('clients.show');
     });
-    Route::get('/calendar/index', [ClientsController::class, 'calendar']);
+    Route::group(['prefix' => 'calendar'], function () {
+        Route::get('/index', [ClientsController::class, 'calendar']);
+        Route::post('/store-task', [TaskController::class, 'task_store']);
+        Route::get('/get-user', [ClientsController::class, 'getUsers']);
+        Route::get('/get-deal', [ClientsController::class, 'getDeals']);
+    });
     Route::group(['prefix' => 'task'], function () {
         Route::get('/index', [TaskController::class, 'index']);
     });
     Route::group(['prefix' => 'user'], function () {
         Route::get('/index', [UserController::class, 'index'])->name('user.index');
         Route::post('/insert', [UserController::class, 'store'])->name('user.store');
-        Route::put('/update', [UserController::class, 'update'])->name('user.update');
+        Route::get('/edit/{id}', [UserController::class, 'edit'])->name('user.edit');
+        Route::post('/update', [UserController::class, 'update'])->name('user.update');
         Route::get('/show', [UserController::class, 'show'])->name('user.show');
-        Route::delete('/destroy', [UserController::class, 'destroy'])->name('user.destroy');
+        Route::post('/delete', [UserController::class, 'destroy'])->name('user.destroy');
     });
     Route::group(['prefix' => 'installment-plan'], function () {
         Route::get('/index', [InstallmentPlanController::class, 'index']);

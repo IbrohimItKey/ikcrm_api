@@ -34,17 +34,17 @@ class TaskController extends Controller
         return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
+        $users = User::select('first_name', 'last_name', 'middle_name', 'email', 'role_id', 'avatar AS image')->get();
         $listLeads = Clients::select('id', 'last_name', 'first_name', 'middle_name')->get();
         $models = Task::where('task_date', '<', date('Y-m-d 00:00:00', strtotime('+8 days')))->orderBy('task_date', 'asc')->paginate(config('params.pagination'));
 
         $arr = [
-            translate('Overdue') => [],
-            translate('Tasks for today') => [],
-            translate('Tasks for tomorrow') => [],
-            translate('Tasks for next week') => [],
+            'Overdue' => [],
+            'Tasks for today' => [],
+            'Tasks for tomorrow' => [],
+            'Tasks for next week' => [],
         ];
         $i = 0;
         if (!empty($models)) {
@@ -52,13 +52,13 @@ class TaskController extends Controller
                 // pre($val->deal->client);
                 $keyArr = '';
                 if (strtotime($val->task_date) < strtotime(date('Y-m-d 00:00:00')))
-                    $keyArr = translate('Overdue');
+                    $keyArr = 'Overdue';
                 else if (strtotime($val->task_date) == strtotime(date('Y-m-d 00:00:00')))
-                    $keyArr = translate('Tasks for today');
+                    $keyArr = 'Tasks for today';
                 else if (strtotime($val->task_date) == strtotime(date('Y-m-d 00:00:00', strtotime('tomorrow'))))
-                    $keyArr = translate('Tasks for tomorrow');
+                    $keyArr = 'Tasks for tomorrow';
                 else if (strtotime($val->task_date) > strtotime(date('Y-m-d 00:00:00', strtotime('tomorrow'))) && strtotime($val->task_date) <= strtotime(date('Y-m-d 00:00:00', strtotime('+8 days'))))
-                    $keyArr = translate('Tasks for next week');
+                    $keyArr = 'Tasks for next week';
 
                 if ($val->deal && $val->deal->client) {
                     $arr[$keyArr][$i]['id'] = $val->id;
@@ -72,80 +72,19 @@ class TaskController extends Controller
                 }
             }
         }
-        // pre($arr);
-
-        return view('forthebuilder::task.index', [
-            'arr' => $arr,
-            'models' => $models,
-            'users' => $users,
-            'listLeads' => $listLeads,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
-
-    /**
-     * Display a listing of the resource.
-     * @return Renderable
-     */
-    public function filterIndex()
-    {
-        $users = User::all();
-        $listLeads = Clients::select('id', 'last_name', 'first_name', 'middle_name')->get();
-        // $models = Task::where('task_date', '<', date('Y-m-d 00:00:00', strtotime('+8 days')))->orderBy('task_date', 'asc')->paginate(config('params.pagination'));
-        $models = Task::where('task_date', '<', date('Y-m-d 00:00:00', strtotime('+8 days')))->orderBy('task_date', 'asc')->where('performer_id', Auth::user()->id)->get();
-
-        $arr = [
-            translate('Overdue') => [],
-            translate('Tasks for today') => [],
-            translate('Tasks for tomorrow') => [],
-            translate('Tasks for next week') => [],
-        ];
-        $i = 0;
-        if (!empty($models)) {
-            foreach ($models as $val) {
-                // pre($val->deal->client);
-                $keyArr = '';
-                if (strtotime($val->task_date) < strtotime(date('Y-m-d 00:00:00')))
-                    $keyArr = translate('Overdue');
-                else if (strtotime($val->task_date) == strtotime(date('Y-m-d 00:00:00')))
-                    $keyArr = translate('Tasks for today');
-                else if (strtotime($val->task_date) == strtotime(date('Y-m-d 00:00:00', strtotime('tomorrow'))))
-                    $keyArr = translate('Tasks for tomorrow');
-                else if (strtotime($val->task_date) > strtotime(date('Y-m-d 00:00:00', strtotime('tomorrow'))) && strtotime($val->task_date) <= strtotime(date('Y-m-d 00:00:00', strtotime('+8 days'))))
-                    $keyArr = translate('Tasks for next week');
-
-                $arr[$keyArr][$i]['id'] = $val->id;
-                $arr[$keyArr][$i]['responsible'] = (isset($val->performer)) ? $val->performer->last_name . ' ' . $val->performer->first_name : '';
-                $arr[$keyArr][$i]['client'] = (isset($val->deal->client)) ? $val->deal->client->last_name . ' ' . $val->deal->client->first_name : '';
-                $arr[$keyArr][$i]['client_middle_name'] = (isset($val->deal->client)) ? $val->deal->client->middle_name : '';
-                $arr[$keyArr][$i]['client_id'] = $val->deal->client->id ?? 0;
-                $arr[$keyArr][$i]['day'] = date('d.m.Y', strtotime($val->task_date));
-                $arr[$keyArr][$i]['time'] = date('H:i:s', strtotime($val->task_date));
-                $i++;
-            }
-        }
-
-        return view('forthebuilder::task.index', [
-            'arr' => $arr,
-            'users' => $users,
-            'listLeads' => $listLeads,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     * @return Renderable
-     */
-    public function create()
-    {
-        $models = Task::all();
-        $users = User::all();
-
-        return view('forthebuilder::task.create', [
-            'models' => $models,
-            'users' => $users,
-            'all_notifications' => $this->getNotification(),
+        $page = $request->page;
+        $pagination = Constants::PAGINATION;
+        $offset = ($page - 1) * $pagination;
+        $endCount = $offset + $pagination;
+        $count = count($arr);
+        $paginated_results = array_slice($arr, $offset, $pagination);
+        $paginatin_count = ceil($count/$pagination);
+        return response([
+            'status' => true,
+            'message' => 'success',
+            'data' => $paginated_results,
+            "pagination"=>true,
+            "pagination_count"=>$paginatin_count
         ]);
     }
 
@@ -154,7 +93,7 @@ class TaskController extends Controller
      * @param Request $request
      * @return Renderable
      */
-    public function calendar_store(Request $request)
+    public function task_store(Request $request)
     {
         $model = new Task();
         $model->user_id = Auth::user()->id;
@@ -176,7 +115,6 @@ class TaskController extends Controller
         Log::channel('action_logs2')->info("пользователь создал новую Task : " . $model->title . "", ['info-data' => $model]);
 
         $userIdTask = User::findOrFail($request->performer_id);
-        event(new RealTimeMessage($title, $userIdTask));
         $notification = new Notification_();
         $notify_array = [
             'id' => $model->id,
@@ -196,11 +134,11 @@ class TaskController extends Controller
         $notification->notifiable_id = $model->id;
         $notification->type = 'Task';
         $notification->save();
-        if (isset($request->is_task)) {
-            return redirect()->route('forthebuilder.clients.show', [$request->client_id, "0", '0'])->with('success', __('locale.successfully'));
-        } else {
-            return redirect()->route('forthebuilder.clients.calendar')->with('success', __('locale.successfully'));
-        }
+        return response([
+            'status' => true,
+            'message' => 'success',
+            'id' => 14
+        ]);
     }
 
     public function taskAnswer(Request $request)
