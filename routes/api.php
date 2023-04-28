@@ -10,7 +10,7 @@ use App\Http\Controllers\ForTheBuilderController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\CurrencyController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\CouponContoller;
 use App\Models\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +32,7 @@ Route::post('/login', [AuthController::class, 'Login']);
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/logout', [AuthController::class, 'Logout']);
     Route::get('/house', [HouseController::class, 'index']);
+    Route::get('/price-formation', [HouseController::class, 'priceFormation']);
 
     Route::get('/dashboard', [ForTheBuilderController::class, 'index']);
 
@@ -82,12 +83,19 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/delete', [LanguageController::class, 'languageDestroy']);
         // Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
     });
-    Route::group(['prefix' => 'currency'], function () {
-        Route::get('/index', [CurrencyController::class, 'index']);
-        Route::post('/update', [CurrencyController::class, 'update']);
-        // Route::get('/show', [BookingController::class, 'show']);
+    Route::group(['prefix' => 'coupon'], function () {
+        Route::get('/index', [CouponContoller::class, 'index']);
         // Route::post('/insert', [BookingController::class, 'store']);
-        // Route::post('/show/status/update', [BookingController::class, 'statusUpdate']);
+        // Route::post('update', [BookingController::class, 'statusUpdate']);
+        // Route::post('/delete', [LanguageController::class, 'languageDestroy']);
+
+    });
+    Route::group(['prefix' => 'booking'], function () {
+        Route::get('/index', [BookingController::class, 'index']);
+        Route::get('/show', [BookingController::class, 'show']);
+        Route::post('/insert', [BookingController::class, 'store']);
+        Route::post('/show/status/update', [BookingController::class, 'statusUpdate']);
+        Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
 
     });
 

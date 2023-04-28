@@ -24,13 +24,46 @@ class CouponContoller extends Controller
         return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
     }
 
-    public function index()
+    public function index(Requeswt $request)
     {
-        $model = Coupon::orderBy('id', 'desc')->paginate(config('params.pagination'));
-        return view('forthebuilder::coupon.index')->with([
-            'model' => $model,
-            'all_notifications' => $this->getNotification()
+    //  dd('fefsefsfs');
+
+
+
+
+        $coupons = Coupon::orderBy('id', 'desc')->toArray();
+        // dd($coupons);
+
+
+
+        $page = $request->page;
+        $pagination = Constants::PAGINATION; 
+        $offset = ($page - 1) * $pagination;
+        $endCount = $offset + $pagination;
+        $count = count($coupons);
+        // dd($count);
+        $paginated_results=array_slice($coupons, $offset, $pagination);
+        $paginatin_count=ceil($count/$pagination);
+        return response([
+            'status' => true,
+            'message' => 'success',
+            'data' => $paginated_results,
+            "pagination"=>true,
+            "pagination_count"=>$paginatin_count
         ]);
+
+
+
+
+
+
+
+        
+        // $model = Coupon::orderBy('id', 'desc');
+        // return view('forthebuilder::coupon.index')->with([
+        //     'model' => $model,
+        //     'all_notifications' => $this->getNotification()
+        // ]);
     }
 
     /**

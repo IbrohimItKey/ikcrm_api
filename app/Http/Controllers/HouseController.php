@@ -1018,11 +1018,145 @@ class HouseController extends Controller
 
     public function priceFormation()
     {
-        $model = House::all();
-        return view('forthebuilder::house.price-formation', [
-            'model' => $model,
-            'all_notifications' => $this->getNotification()
+        $models = House::all();
+
+
+        // $houses = DB::table('house as dt1')
+        //     ->select('dt1.id','dt1.name','dt1.corpus','dt1.sort','dt1.has_basement')
+        //     ->get();
+            // dd($houses);
+        $data = [];
+        foreach ($models as $model) {
+
+
+
+            $flats = HouseFlat::select('id', 'floor', 'entrance', 'status', 'number_of_flat', 'price', 'areas', 'room_count')->where('house_id', $model->id)->orderBy('entrance', 'asc')->orderBy('floor', 'desc');
+            if ($model->sort == 1) {
+                $flats = $flats->orderBy('number_of_flat', 'desc');
+            } else {
+                $flats = $flats->orderBy('number_of_flat', 'asc');
+            }
+            $flats = $flats->get();
+            // pre($flats);
+            $statusColors = StatusColors::select('id', 'color', 'status')->get();
+            $arr = [];
+            $i_default = ($model->has_basement) ? 0 : 1;
+            $j_default = ($model->has_attic) ? $model->floor_count + 1 : $model->floor_count;
+            // dd($j_default);
+            for ($i = 1; $i <= $model->entrance_count; $i++) {
+                for ($j = $j_default; $j >= $i_default; $j--) {
+                    $f_j = $j;
+                    // echo $j . '>' . $model->floor_count . '<br>';
+                    if ($j > $model->floor_count)
+                        $f_j = translate('attic');
+
+                    if ($j == 0)
+                        $f_j = translate('basement');
+
+                    $arr['list'][$i]['list'][$f_j] = [];
+                    $arr['entrance_count'][$f_j] = $f_j;
+                }
+            }
+
+            // for ($i = 1; $i <= $model->entrance_count; $i++)
+            //     for ($j = $model->floor_count; $j >= 1; $j--)
+            //         $arr['list'][$i]['list'][$j] = [];
+
+            $count_all = 0;
+            $count_bookings = 0;
+            $count_free = 0;
+            $count_solds = 0;
+
+            $entrance_all = 0;
+            $entrance_bookings = 0;
+            $entrance_free = 0;
+            $entrance_solds = 0;
+
+            $entranceArr = [];
+            $floorArr = [];
+            $n = 0;
+
+            $model->entrance_count;
+            $model->floor_count;
+            // $entrance_count = 0;
+            // $floor_count = 0;
+            // pre($flats);
+            foreach ($flats as $val) {
+                $count_all++;
+                if ($val->status == HouseFlat::STATUS_BOOKING)
+                    $count_bookings++;
+                else if ($val->status == HouseFlat::STATUS_FREE)
+                    $count_free++;
+                else if ($val->status == HouseFlat::STATUS_SOLD)
+                    $count_solds++;
+
+                if (!in_array($val->entrance, $entranceArr)) {
+                    $entranceArr[] = $val->entrance;
+                    $entrance_all = 0;
+                    $entrance_bookings = 0;
+                    $entrance_free = 0;
+                    $entrance_solds = 0;
+                }
+
+                $entrance_all++;
+                if ($val->status == HouseFlat::STATUS_BOOKING)
+                    $entrance_bookings++;
+                else if ($val->status == HouseFlat::STATUS_FREE)
+                    $entrance_free++;
+                else if ($val->status == HouseFlat::STATUS_SOLD)
+                    $entrance_solds++;
+
+                if (!in_array($val->floor, $floorArr)) {
+                    $floorArr[] = $val->floor;
+                    $n = 0;
+                }
+
+                $f_j = $val->floor;
+                if ($val->floor > $model->floor_count)
+                    $f_j = translate('attic');
+
+                if ($val->floor == 0)
+                    $f_j = translate('basement');
+
+                $arr['list'][$val->entrance]['entrance_all'] = $entrance_all;
+                $arr['list'][$val->entrance]['entrance_bookings'] = $entrance_bookings;
+                $arr['list'][$val->entrance]['entrance_free'] = $entrance_free;
+                $arr['list'][$val->entrance]['entrance_solds'] = $entrance_solds;
+                $arr['list'][$val->entrance]['entrance'] = $val->entrance;
+                $arr['list'][$val->entrance]['list'][$f_j][$n]['id'] = $val->id;
+                $arr['list'][$val->entrance]['list'][$f_j][$n]['color_status'] = $val->status;
+                $arr['list'][$val->entrance]['list'][$f_j][$n]['number_of_flat'] = $val->number_of_flat;
+                $arr['list'][$val->entrance]['list'][$f_j][$n]['areas'] = $val->areas;
+                $arr['list'][$val->entrance]['list'][$f_j][$n]['price'] = $val->price;
+                $arr['list'][$val->entrance]['list'][$f_j][$n]['contract_number'] = $val->contract_number;
+                $arr['list'][$val->entrance]['list'][$f_j][$n]['room_count'] = $val->room_count;
+
+                $n++;
+            }
+
+            $arr['count_all'] = $count_all;
+            $arr['count_bookings'] = $count_bookings;
+            $arr['count_free'] = $count_free;
+            $arr['count_solds'] = $count_solds;
+
+
+            $house_information=[
+              'id'=>$model->id,
+              'name'=>$model->name,
+              'corpus'=>$model->corpus,
+              'house_flat'=>$arr
+            ];
+
+            array_push($data,$house_information);
+           
+        }
+
+        return response([
+            'status' => true,
+            'message' => 'success',
+            'data' => $data,
         ]);
+
     }
 
     public function pricesHouseFlats(Request $request)
