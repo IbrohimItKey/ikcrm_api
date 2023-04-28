@@ -33,7 +33,39 @@ class TaskController extends Controller
         $all_booking = Notification_::whereIn('type', $notification)->where('read_at', NULL)->orderBy('created_at', 'desc')->get();
         return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
     }
+    /**
+     * @OA\Get(
+     *     path="/api/task/index?page=1",
+     *     tags={"Task"},
+     *     summary="Get Task",
+     *     description="Get Task",
+     *     operationId="index",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
 
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
+     */
     public function index(Request $request)
     {
         $users = User::select('first_name', 'last_name', 'middle_name', 'email', 'role_id', 'avatar AS image')->get();
@@ -89,9 +121,58 @@ class TaskController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     * @param Request $request
-     * @return Renderable
+     * @OA\Post(
+     *     path="/api/clients/store-task",
+     *     tags={"Calendar"},
+     *     summary="create a task with form data",
+     *     operationId="task_store",
+     *     @OA\Parameter(
+     *         name="petId",
+     *         in="path",
+     *         description="ID of pet that needs to be updated",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer",
+     *             format="int64"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="application/x-www-form-urlencoded",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="performer_id",
+     *                     description="performer id",
+     *                     type="integer",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="deal_id",
+     *                     description="deal id",
+     *                     type="integer",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="task_date",
+     *                     description="task date type data",
+     *                     type="date",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="type",
+     *                     description="type",
+     *                     type="string",
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function task_store(Request $request)
     {

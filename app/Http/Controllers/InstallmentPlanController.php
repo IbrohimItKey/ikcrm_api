@@ -32,8 +32,40 @@ class InstallmentPlanController extends Controller
         $all_booking = Notification_::whereIn('type', $notification)->where('read_at', NULL)->orderBy('created_at', 'desc')->get();
         return ['all_task' => $all_task, 'all_booking' => $all_booking];
     }
+    /**
+     * @OA\Get(
+     *     path="/api/installment-plan/index?page=1",
+     *     tags={"Installment-plan"},
+     *     summary="Get Installment plans",
+     *     description="Get Installment plans",
+     *     operationId="plan_index",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
 
-    public function index(Request $request)
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
+     */
+    public function plan_index(Request $request)
     {
         // $models = Deal::where('installment_plan_id', '!=', NULL);
         $models = Deal::with('house_flat', 'user', 'client')->where('installment_plan_id', '!=', NULL)
@@ -68,8 +100,28 @@ class InstallmentPlanController extends Controller
         ]);
 
     }
+    /**
+     * @OA\Get(
+     *     path="/api/installment-plan/show?id=10",
+     *     tags={"Installment-plan"},
+     *     summary="Get Installment plan",
+     *     description="Get Installment plan",
+     *     operationId="plan_show",
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
 
-    public function show(Request $request)
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
+     */
+    public function plan_show(Request $request)
     {
         $model = Deal::findOrFail($request->id);
         $statuses = PayStatus::where('deal_id', $request->id)->get();
@@ -145,8 +197,46 @@ class InstallmentPlanController extends Controller
             'statuses' => $statuses,
         ]);
     }
-
-    public function paySum(Request $request)
+    /**
+     * @OA\Post(
+     *     path="/api/installment-plan/pay-sum",
+     *     tags={"Installment-plan"},
+     *     summary="create a task with form data",
+     *     operationId="plan_paySum",
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="application/x-www-form-urlencoded",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     description="Installment plan id",
+     *                     type="integer",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="deal_id",
+     *                     description="Deal id",
+     *                     type="integer",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="sum",
+     *                     description="Sum",
+     *                     type="integer",
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function plan_paySum(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'status' => 'string|max:25',
@@ -203,8 +293,36 @@ class InstallmentPlanController extends Controller
         return response($response);
     }
 
-
-    public function reduceSum(Request $request)
+    /**
+     * @OA\Post(
+     *     path="/api/installment-plan/remove-payment",
+     *     tags={"Installment-plan"},
+     *     summary="Make pay status not paid with form data",
+     *     operationId="plan_reduceSum",
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="application/x-www-form-urlencoded",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     description="Pay sttus id",
+     *                     type="integer",
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function plan_reduceSum(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'status' => 'string|max:25',

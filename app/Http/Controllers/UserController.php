@@ -33,8 +33,40 @@ class UserController extends Controller
         $all_booking = Notification_::whereIn('type', $notification)->where('read_at', NULL)->orderBy('created_at', 'desc')->get();
         return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
     }
+    /**
+     * @OA\Get(
+     *     path="/api/user/index?page=1",
+     *     tags={"User"},
+     *     summary="Get User",
+     *     description="Get User",
+     *     operationId="user_index",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
 
-    public function index(Request $request)
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
+     */
+    public function user_index(Request $request)
     {
         if(Gate::allows('isAdmin')){
             $models = User::select('id', 'first_name', 'last_name', 'middle_name', 'email', 'avatar')
@@ -73,8 +105,71 @@ class UserController extends Controller
     public function settings(){
         return view('forthebuilder::settings.index', ['all_notifications' => $this->getNotification()]);
     }
-
-    public function store(ForTheBuilderUserRequest $request)
+    /**
+     * @OA\Post(
+     *     path="/api/user/insert",
+     *     tags={"User"},
+     *     summary="create a task with form data",
+     *     operationId="user_store",
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="first_name",
+     *                     description="firstname",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="last_name",
+     *                     description="lastname",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="middle_name",
+     *                     description="middle name",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="email",
+     *                     description="email",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="role_id",
+     *                     description="role id",
+     *                     type="integer",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="avatar",
+     *                     description="image",
+     *                     type="file",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="password",
+     *                     description="password",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="password_confirmation",
+     *                     description="password confirmation",
+     *                     type="string",
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function user_store(ForTheBuilderUserRequest $request)
     {
         $data = $request->validated();
         $data['status'] = 2;
@@ -99,12 +194,39 @@ class UserController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
+     * @OA\Get(
+     *     path="/api/user/show?page=1",
+     *     tags={"User"},
+     *     summary="User show",
+     *     description="User show",
+     *     operationId="user_show",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
+
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
      */
-    public function show(Request $request)
+    public function user_show(Request $request)
     {
         // \Artisan::call('websocket:start');
 
@@ -152,12 +274,39 @@ class UserController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
+     * @OA\Get(
+     *     path="/api/user/edit/{id}",
+     *     tags={"User"},
+     *     summary="User edit",
+     *     description="User edit",
+     *     operationId="user_edit",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
+
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
      */
-    public function edit($id)
+    public function user_edit($id)
     {
         $model = User::select('id', 'first_name', 'last_name', 'middle_name', 'email', 'role_id', 'role_id', 'avatar as image')
             ->findOrfail($id);
@@ -166,13 +315,80 @@ class UserController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
+     * @OA\Post(
+     *     path="/api/user/update",
+     *     tags={"User"},
+     *     summary="create a task with form data",
+     *     operationId="user_update",
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="first_name",
+     *                     description="firstname",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="last_name",
+     *                     description="lastname",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="middle_name",
+     *                     description="middle name",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="status",
+     *                     description="status",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="email",
+     *                     description="email",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="role_id",
+     *                     description="role id",
+     *                     type="integer",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="avatar",
+     *                     description="image",
+     *                     type="file",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="current_password",
+     *                     description="current password",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="password",
+     *                     description="password",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="password_confirmation",
+     *                     description="password confirmation",
+     *                     type="string",
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
      */
-    public function update(ForTheBuilderUserRequest $request)
+    public function user_update(ForTheBuilderUserRequest $request)
     {
         $data = $request->validated();
         $model = User::findOrFail($request->id);
@@ -219,17 +435,38 @@ class UserController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
+     * @OA\Post(
+     *     path="/api/user/delete",
+     *     tags={"User"},
+     *     summary="Delete a user with form data",
+     *     operationId="user_destroy",
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="application/x-www-form-urlencoded",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     description="User id",
+     *                     type="integer",
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
      */
-    public function destroy(Request $request)
+    public function user_destroy(Request $request)
     {
-
         $user = User::findOrFail($request->id);
         if($user->id != Auth::user()->id) $user->delete();
-
         Log::channel('action_logs2')->info("пользователь удалил ".$user->first_name." Пользователь",['info-data'=>$user]);
 
         $response = [
