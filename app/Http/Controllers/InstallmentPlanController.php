@@ -32,8 +32,40 @@ class InstallmentPlanController extends Controller
         $all_booking = Notification_::whereIn('type', $notification)->where('read_at', NULL)->orderBy('created_at', 'desc')->get();
         return ['all_task' => $all_task, 'all_booking' => $all_booking];
     }
+    /**
+     * @OA\Get(
+     *     path="/api/installment-plan/index?page=1",
+     *     tags={"Installment-plan"},
+     *     summary="Get Installment plans",
+     *     description="Get Installment plans",
+     *     operationId="plan_index",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
 
-    public function index()
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
+     */
+    public function plan_index(Request $request)
     {
         // $models = Deal::where('installment_plan_id', '!=', NULL);
         $models = Deal::with('house_flat', 'user', 'client')->where('installment_plan_id', '!=', NULL)
@@ -52,40 +84,44 @@ class InstallmentPlanController extends Controller
                 'period'=>$model->installmentPlan->period ?? 0,
             ];
         }
-        $response = [
-            "status" => true,
-            "message" => "success",
-            "data" => $installment_plans
-        ];
-        return response($response);
+        $page = $request->page;
+        $pagination = Constants::PAGINATION;
+        $offset = ($page - 1) * $pagination;
+        $endCount = $offset + $pagination;
+        $count = count($installment_plans);
+        $paginated_results = array_slice($installment_plans, $offset, $pagination);
+        $paginatin_count = ceil($count/$pagination);
+        return response([
+            'status' => true,
+            'message' => 'success',
+            'data' => $paginated_results,
+            "pagination"=>true,
+            "pagination_count"=>$paginatin_count
+        ]);
 
     }
-
     /**
-     * Show the form for creating a new resource.
-     * @return Renderable
-     */
-    public function create()
-    {
-        return view('forthebuilder::installment-plan.create', ['all_notifications' => $this->getNotification()]);
-    }
+     * @OA\Get(
+     *     path="/api/installment-plan/show?id=10",
+     *     tags={"Installment-plan"},
+     *     summary="Get Installment plan",
+     *     description="Get Installment plan",
+     *     operationId="plan_show",
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
 
-    /**
-     * Store a newly created resource in storage.
-     * @param Request $request
-     * @return Renderable
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
      */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Show the specified resource.
-     * @param int $id
-     * @return Renderable
-     */
-    public function show(Request $request)
+    public function plan_show(Request $request)
     {
         $model = Deal::findOrFail($request->id);
         $statuses = PayStatus::where('deal_id', $request->id)->get();
@@ -107,6 +143,7 @@ class InstallmentPlanController extends Controller
                 default:
                     $status_name = 'Не оплачен';
             }
+
             $installment_plan[] = [
                 'id' => $status->id,
                 'pay_date' => $status->must_pay_date,
@@ -127,50 +164,13 @@ class InstallmentPlanController extends Controller
               'agreement_number'=> $model->agreement_number ?? '',
               'price_sell'=> number_format($model->price_sell, 2, ',', '.'),
               'initial_fee'=> number_format($model->initial_fee, 2, ',', '.'),
-              'period'=> $model->installmentPlan->period ,
+              'period'=> $model->installmentPlan->period ?? "",
               'user_full_name' => $model && $model->user ? $model->user->first_name . ' ' . $model->user->last_name . ' ' . $model->user->middle_name : '',
-              'house_flat_image' =>  asset('/uploads/house-flat/' . $model->house_id . '/m_' . $model->house_flat->main_image->guid),
-              'installment-plan' => $installment_plan,
+              'house_flat_image' =>  asset('/uploads/house-flat/' . $model->house_id . '/m_' . $model->house_flat->main_image->guid) ?? "",
+              'installment-plan' => $installment_plan??[],
             ],
         ];
         return response($response);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     * @param int $id
-     * @return Renderable
-     */
-    public function edit($id)
-    {
-        $model = InstallmentPlan::findOrFail($id);
-        return view('forthebuilder::installment-plan.edit', [
-            'model' => $model,
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     * @param Request $request
-     * @param int $id
-     * @return Renderable
-     */
-    public function update(InstallmentPlanRequest $request, $id)
-    {
-        $data = $request->validated();
-        $model = InstallmentPlan::findOrFail($id);
-
-        $model->period = $data['period'];
-        $model->percent = $data['percent'];
-        $model->an_initial_fee = $data['an_initial_fee'];
-        $model->start_date = $data['start_date'];
-        $model->month_pay_first = $data['month_pay_first'];
-        $model->month_pay_second = $data['month_pay_second'];
-        $model->save();
-
-        Log::channel('action_logs2')->info("пользователь обновил Installment plan", ['info-data' => $model]);
-        return redirect()->route('forthebuilder.installment-plan.index')->with('success', __('locale.successfully'));
     }
 
     /**
@@ -197,8 +197,46 @@ class InstallmentPlanController extends Controller
             'statuses' => $statuses,
         ]);
     }
-
-    public function paySum(Request $request)
+    /**
+     * @OA\Post(
+     *     path="/api/installment-plan/pay-sum",
+     *     tags={"Installment-plan"},
+     *     summary="create a task with form data",
+     *     operationId="plan_paySum",
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="application/x-www-form-urlencoded",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     description="Installment plan id",
+     *                     type="integer",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="deal_id",
+     *                     description="Deal id",
+     *                     type="integer",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="sum",
+     *                     description="Sum",
+     *                     type="integer",
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function plan_paySum(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'status' => 'string|max:25',
@@ -255,41 +293,36 @@ class InstallmentPlanController extends Controller
         return response($response);
     }
 
-    // public function paySum(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'status' => 'string|max:25',
-    //     ]);
-    //     if ($validator->fails()) {
-    //         return response()->json($validator);
-    //     }
-    //     $paystatus = PayStatus::findOrFail($request->id);
-    //     $model_paystatus = PayStatus::where(['installment_plan_id' => $paystatus->installment_plan_id])
-    //         ->WhereIn('status', ["Част. оплата", "Не оплачен"])->first();
-    //     $monthly_sum = 0;
-    //     if ($paystatus->plan->period == '12 месяц') {
-    //         $monthly_sum = ($paystatus->plan->all_sum - $paystatus->plan->an_initial_fee) / 12;
-    //     } else {
-    //         $monthly_sum = ($paystatus->plan->all_sum - $paystatus->plan->an_initial_fee) / 18;
-    //     }
-    //     $sum = $model_paystatus->sum ?? 0;
-    //     $j = floor(($request->sum + $sum) / $monthly_sum);
-    //     $the_rest_sum = $request->sum + $sum - $monthly_sum * $j;
-    //     for ($i = 0; $i < $j; $i++) {
-    //         $model = PayStatus::findOrFail($model_paystatus->id + $i);
-    //         $model->status = 'Оплачен';
-    //         $model->sum = $monthly_sum;
-    //         $model->save();
-    //     }
-    //     $model = PayStatus::findOrFail($model_paystatus->id + $j);
-    //     $model->status = 'Част. оплата';
-    //     $model->sum = round($the_rest_sum, 2);
-    //     $model->save();
-
-    //     return redirect()->back()->with('success', 'Статус измeнён');
-    // }
-
-    public function reduceSum(Request $request)
+    /**
+     * @OA\Post(
+     *     path="/api/installment-plan/remove-payment",
+     *     tags={"Installment-plan"},
+     *     summary="Make pay status not paid with form data",
+     *     operationId="plan_reduceSum",
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="application/x-www-form-urlencoded",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     description="Pay sttus id",
+     *                     type="integer",
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function plan_reduceSum(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'status' => 'string|max:25',

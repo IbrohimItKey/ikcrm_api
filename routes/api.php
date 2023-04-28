@@ -44,26 +44,32 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/show', [ClientsController::class, 'show']);
         Route::post('/delete', [ClientsController::class, 'delete']);
     });
-    Route::get('/calendar/index', [ClientsController::class, 'calendar']);
+    Route::group(['prefix' => 'calendar'], function () {
+        Route::get('/index', [ClientsController::class, 'calendar']);
+        Route::post('/store-task', [TaskController::class, 'task_store']);
+        Route::get('/get-user', [ClientsController::class, 'getUsers']);
+        Route::get('/get-deal', [ClientsController::class, 'getDeals']);
+    });
     Route::group(['prefix' => 'task'], function () {
         Route::get('/index', [TaskController::class, 'index']);
     });
     Route::group(['prefix' => 'user'], function () {
-        Route::get('/index', [UserController::class, 'index'])->name('user.index');
-        Route::post('/insert', [UserController::class, 'store'])->name('user.store');
-        Route::put('/update', [UserController::class, 'update'])->name('user.update');
-        Route::get('/show', [UserController::class, 'show'])->name('user.show');
-        Route::delete('/destroy', [UserController::class, 'destroy'])->name('user.destroy');
+        Route::get('/index', [UserController::class, 'user_index'])->name('user.index');
+        Route::post('/insert', [UserController::class, 'user_store'])->name('user.store');
+        Route::get('/edit/{id}', [UserController::class, 'user_edit'])->name('user.edit');
+        Route::post('/update', [UserController::class, 'user_update'])->name('user.update');
+        Route::get('/show', [UserController::class, 'user_show'])->name('user.show');
+        Route::post('/delete', [UserController::class, 'user_destroy'])->name('user.destroy');
     });
     Route::group(['prefix' => 'installment-plan'], function () {
-        Route::get('/index', [InstallmentPlanController::class, 'index']);
-        Route::get('/show', [InstallmentPlanController::class, 'show']);
-        Route::post('/pay-sum', [InstallmentPlanController::class, 'paySum']);
-        Route::post('/remove-payment', [InstallmentPlanController::class, 'reduceSum']);
+        Route::get('/index', [InstallmentPlanController::class, 'plan_index']);
+        Route::get('/show', [InstallmentPlanController::class, 'plan_show']);
+        Route::post('/pay-sum', [InstallmentPlanController::class, 'plan_paySum']);
+        Route::post('/remove-payment', [InstallmentPlanController::class, 'plan_reduceSum']);
     });
     Route::group(['prefix' => 'deal'], function () {
-        Route::get('/index', [DealController::class, 'index']);
-        Route::post('/update-status', [DealController::class, 'updateStatus']);
+        Route::get('/index', [DealController::class, 'deal_index']);
+        Route::post('/update-status', [DealController::class, 'deal_updateStatus']);
     });
     Route::group(['prefix' => 'booking'], function () {
         Route::get('/index', [BookingController::class, 'index']);
@@ -99,4 +105,4 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     });
 
-}); 
+});

@@ -37,14 +37,14 @@ class ForTheBuilderUserRequest extends BaseFormRequest
     public function update()
     {
         return [
+            'id' => 'required|integer|max:200',
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'role_id' => ['required', 'integer', 'max:200'],
-//            'email' => "required|unique:users,email,{$this->id}"
-            'email' => ['required', 'string', 'email', 'max:255',Rule::unique('users', 'email')->ignore($this->id)],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'current_password' => ['nullable', 'string', 'min:8'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => 'nullable|string|min:8|confirmed',
+            'current_password' => 'nullable|string|min:8',
             'avatar' =>'nullable|mimes:jpeg,jpg,png|max:10240',
             'status' =>'nullable|integer',
         ];

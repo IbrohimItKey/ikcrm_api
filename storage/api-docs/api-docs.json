@@ -147,7 +147,7 @@
                 ]
             }
         },
-        "/api/clients": {
+        "/api/clients/index": {
             "get": {
                 "tags": [
                     "Clients"
@@ -179,6 +179,1031 @@
                     },
                     "400": {
                         "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/clients/all-clients": {
+            "get": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Get Clients",
+                "description": "Get Clients",
+                "operationId": "allClients",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/clients/insert": {
+            "post": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Updates a client in the store with form data",
+                "operationId": "insert",
+                "parameters": [
+                    {
+                        "name": "petId",
+                        "in": "path",
+                        "description": "ID of pet that needs to be updated",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Input data format",
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "description": "Updated first name",
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "description": "Updated last name",
+                                        "type": "string"
+                                    },
+                                    "middle_name": {
+                                        "description": "Updated middle name",
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "description": "Updated phone",
+                                        "type": "string"
+                                    },
+                                    "additional_phone_number": {
+                                        "description": "Updated additional phone",
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "description": "Updated email",
+                                        "type": "string"
+                                    },
+                                    "source": {
+                                        "description": "Updated source",
+                                        "type": "string"
+                                    },
+                                    "issued_by": {
+                                        "description": "Updated issued by",
+                                        "type": "string"
+                                    },
+                                    "series_number": {
+                                        "description": "Updated series number",
+                                        "type": "string"
+                                    },
+                                    "inn": {
+                                        "description": "Updated inn",
+                                        "type": "string"
+                                    },
+                                    "looking_for": {
+                                        "description": "Updated looking for",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/clients/update": {
+            "post": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Updates a client in the store with form data",
+                "operationId": "update",
+                "parameters": [
+                    {
+                        "name": "petId",
+                        "in": "path",
+                        "description": "ID of pet that needs to be updated",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Input data format",
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "description": "Updated first name",
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "description": "Updated last name",
+                                        "type": "string"
+                                    },
+                                    "middle_name": {
+                                        "description": "Updated middle name",
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "description": "Updated phone",
+                                        "type": "string"
+                                    },
+                                    "additional_phone_number": {
+                                        "description": "Updated additional phone",
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "description": "Updated email",
+                                        "type": "string"
+                                    },
+                                    "source": {
+                                        "description": "Updated source",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/clients/delete": {
+            "post": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Delete a client in the store with form data",
+                "operationId": "delete",
+                "parameters": [
+                    {
+                        "name": "petId",
+                        "in": "path",
+                        "description": "ID of pet that needs to be updated",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Input data format",
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "Deleted id",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/clients/show": {
+            "get": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Get Client",
+                "description": "Get Client",
+                "operationId": "show",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/calendar/index": {
+            "get": {
+                "tags": [
+                    "Calendar"
+                ],
+                "summary": "Get calendar",
+                "description": "Get calendar",
+                "operationId": "calendar",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/calendar/get-user": {
+            "get": {
+                "tags": [
+                    "Calendar"
+                ],
+                "summary": "Get calendar",
+                "description": "Get calendar",
+                "operationId": "getUsers",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/calendar/get-deal": {
+            "get": {
+                "tags": [
+                    "Calendar"
+                ],
+                "summary": "Get calendar",
+                "description": "Get calendar",
+                "operationId": "getDeals",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/deal/index?page=1": {
+            "get": {
+                "tags": [
+                    "Deal"
+                ],
+                "summary": "Get Deals",
+                "description": "Get Deals",
+                "operationId": "deal_index",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/deal/update-status": {
+            "post": {
+                "tags": [
+                    "Deal"
+                ],
+                "summary": "Update a deal status with form data",
+                "operationId": "deal_updateStatus",
+                "requestBody": {
+                    "description": "Input data format",
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "Deal id",
+                                        "type": "integer"
+                                    },
+                                    "type": {
+                                        "description": "deal type",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/installment-plan/index?page=1": {
+            "get": {
+                "tags": [
+                    "Installment-plan"
+                ],
+                "summary": "Get Installment plans",
+                "description": "Get Installment plans",
+                "operationId": "plan_index",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/installment-plan/show?id=10": {
+            "get": {
+                "tags": [
+                    "Installment-plan"
+                ],
+                "summary": "Get Installment plan",
+                "description": "Get Installment plan",
+                "operationId": "plan_show",
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/installment-plan/pay-sum": {
+            "post": {
+                "tags": [
+                    "Installment-plan"
+                ],
+                "summary": "create a task with form data",
+                "operationId": "plan_paySum",
+                "requestBody": {
+                    "description": "Input data format",
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "Installment plan id",
+                                        "type": "integer"
+                                    },
+                                    "deal_id": {
+                                        "description": "Deal id",
+                                        "type": "integer"
+                                    },
+                                    "sum": {
+                                        "description": "Sum",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/installment-plan/remove-payment": {
+            "post": {
+                "tags": [
+                    "Installment-plan"
+                ],
+                "summary": "Make pay status not paid with form data",
+                "operationId": "plan_reduceSum",
+                "requestBody": {
+                    "description": "Input data format",
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "Pay sttus id",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/task/index?page=1": {
+            "get": {
+                "tags": [
+                    "Task"
+                ],
+                "summary": "Get Task",
+                "description": "Get Task",
+                "operationId": "index",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/clients/store-task": {
+            "post": {
+                "tags": [
+                    "Calendar"
+                ],
+                "summary": "create a task with form data",
+                "operationId": "task_store",
+                "parameters": [
+                    {
+                        "name": "petId",
+                        "in": "path",
+                        "description": "ID of pet that needs to be updated",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Input data format",
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "performer_id": {
+                                        "description": "performer id",
+                                        "type": "integer"
+                                    },
+                                    "deal_id": {
+                                        "description": "deal id",
+                                        "type": "integer"
+                                    },
+                                    "task_date": {
+                                        "description": "task date type data",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "type": {
+                                        "description": "type",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/user/index?page=1": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get User",
+                "description": "Get User",
+                "operationId": "user_index",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/user/insert": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "create a task with form data",
+                "operationId": "user_store",
+                "requestBody": {
+                    "description": "Input data format",
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "description": "firstname",
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "description": "lastname",
+                                        "type": "string"
+                                    },
+                                    "middle_name": {
+                                        "description": "middle name",
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "description": "email",
+                                        "type": "string"
+                                    },
+                                    "role_id": {
+                                        "description": "role id",
+                                        "type": "integer"
+                                    },
+                                    "avatar": {
+                                        "description": "image",
+                                        "type": "file"
+                                    },
+                                    "password": {
+                                        "description": "password",
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "description": "password confirmation",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/user/show?page=1": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "User show",
+                "description": "User show",
+                "operationId": "user_show",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/user/edit/15": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "User edit",
+                "description": "User edit",
+                "operationId": "user_edit",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status values that needed to be considered for filter",
+                        "required": true,
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "available",
+                            "enum": [
+                                "available",
+                                "pending",
+                                "sold"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid status value"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/user/update": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "create a task with form data",
+                "operationId": "user_update",
+                "requestBody": {
+                    "description": "Input data format",
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "description": "firstname",
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "description": "lastname",
+                                        "type": "string"
+                                    },
+                                    "middle_name": {
+                                        "description": "middle name",
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "description": "status",
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "description": "email",
+                                        "type": "string"
+                                    },
+                                    "role_id": {
+                                        "description": "role id",
+                                        "type": "integer"
+                                    },
+                                    "avatar": {
+                                        "description": "image",
+                                        "type": "file"
+                                    },
+                                    "current_password": {
+                                        "description": "current password",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "description": "password",
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "description": "password confirmation",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/api/user/delete": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Delete a user with form data",
+                "operationId": "user_destroy",
+                "requestBody": {
+                    "description": "Input data format",
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "User id",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
                     }
                 },
                 "security": [
