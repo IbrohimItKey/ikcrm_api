@@ -779,6 +779,7 @@ class ClientsController extends Controller
         ];
         return response($response);
     }
+
     /**
      * @OA\Get(
      *     path="/api/calendar/get-user",
@@ -812,7 +813,8 @@ class ClientsController extends Controller
      *     },
      * )
      */
-    public function getUsers(){
+    public function getUsers()
+    {
         $users = User::select('id', 'first_name')->get();
         $response = [
             "status" => true,
@@ -854,7 +856,8 @@ class ClientsController extends Controller
      *     },
      * )
      */
-    public function getDeals(){
+    public function getDeals()
+    {
         $deals = Deal::where('status', 1)->get();
         foreach ($deals as $deal) {
             $deal_[] = [
@@ -871,8 +874,10 @@ class ClientsController extends Controller
         ];
         return $response;
     }
+
     public function storeBudget(Request $request)
     {
+        $client_id = $request->client_id;
         $user = Auth::user();
         $model = Deal::find($request->deal_id);
         date_default_timezone_set("Asia/Tashkent");
@@ -912,6 +917,13 @@ class ClientsController extends Controller
             $personal->save();
         }
         $model->save();
-        return redirect()->route('forthebuilder.clients.show', [$model->client_id, "0", "0"])->with('status', translate('successfully'));
+
+        $response = [
+            "status" => true,
+            "message" => "success",
+            // "data" => $tasks
+        ];
+        return response($response);
+        // return redirect()->route('forthebuilder.clients.show', [$model->client_id, "0", "0"])->with('status', translate('successfully'));
     }
 }

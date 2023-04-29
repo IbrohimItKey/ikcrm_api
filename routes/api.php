@@ -43,6 +43,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/update', [ClientsController::class, 'update']);
         Route::get('/show', [ClientsController::class, 'show']);
         Route::post('/delete', [ClientsController::class, 'delete']);
+        Route::post('/store-budget', [ClientsController::class, 'storeBudget']); // ->name('forthebuilder.clients.storeBudget');
     });
     Route::group(['prefix' => 'calendar'], function () {
         Route::get('/index', [ClientsController::class, 'calendar']);
@@ -77,14 +78,18 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/insert', [BookingController::class, 'store']);
         Route::post('/show/status/update', [BookingController::class, 'statusUpdate']);
         Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
-
     });
     Route::group(['prefix' => 'language'], function () {
         Route::get('/index', [LanguageController::class, 'index']);
+        Route::get('/edit', [LanguageController::class, 'languageEdit']);
+
+        Route::match(['get', 'post'], '/create', [LanguageController::class, 'store']);
+
         Route::match(['get', 'post'],'/create',[LanguageController::class, 'store']);
         Route::get('/edit', [LanguageController::class, 'languageEdit']);
         Route::get('/innershow', [LanguageController::class, 'innershow']);
         Route::post('/translation/save', [LanguageController::class, 'translation_save']);
+
         Route::post('/update', [LanguageController::class, 'update']);
         Route::post('/delete', [LanguageController::class, 'languageDestroy']);
         // Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
