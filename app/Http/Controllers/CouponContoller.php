@@ -19,24 +19,19 @@ class CouponContoller extends Controller
      * @return Renderable
      */
 
-    public function getNotification(){
-        $notification = ['Booking', 'BookingPrepayment'];
-        $all_task = Notification_::where('type', 'Task')->where(['read_at' => NULL,  'user_id' => Auth::user()->id])->orderBy('created_at', 'desc')->get();
-        $all_booking = Notification_::whereIn('type', $notification)->where('read_at', NULL)->orderBy('created_at', 'desc')->get();
-        return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
-    }
+    // public function getNotification(){
+    //     $notification = ['Booking', 'BookingPrepayment'];
+    //     $all_task = Notification_::where('type', 'Task')->where(['read_at' => NULL,  'user_id' => Auth::user()->id])->orderBy('created_at', 'desc')->get();
+    //     $all_booking = Notification_::whereIn('type', $notification)->where('read_at', NULL)->orderBy('created_at', 'desc')->get();
+    //     return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
+    // }
 
     public function index(Request $request)
     {
     //  dd('fefsefsfs');
 
-
-
-
         $coupons = Coupon::get()->toArray();
         // dd($coupons);
-
-
 
         $page = $request->page;
         $pagination = Constants::PAGINATION; 
@@ -62,12 +57,12 @@ class CouponContoller extends Controller
      * Show the form for creating a new resource.
      * @return Renderable
      */
-    public function create()
-    {
-        return view('forthebuilder::coupon.create', [
-            'all_notifications' => $this->getNotification()
-        ]);
-    }
+    // public function create()
+    // {
+    //     return view('forthebuilder::coupon.create', [
+    //         'all_notifications' => $this->getNotification()
+    //     ]);
+    // }
 
     /**
      * Store a newly created resource in storage.
@@ -142,9 +137,8 @@ class CouponContoller extends Controller
      */
     public function destroy(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
         if ($model = Coupon::find($request->id)) {
-            $model = Coupon::find($request->id);
             // dd($model);
             $model->delete();
             return response([

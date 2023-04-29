@@ -98,7 +98,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/index', [CouponContoller::class, 'index']);
         Route::post('/insert', [CouponContoller::class, 'store']);
         Route::post('/update', [CouponContoller::class, 'update']);
-        Route::post('/delete', [LanguageController::class, 'destroy']);
+        Route::post('/delete', [CouponContoller::class, 'destroy']);
 
     });
     // Route::group(['prefix' => 'booking'], function () {
