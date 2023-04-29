@@ -91,18 +91,18 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::group(['prefix' => 'coupon'], function () {
         Route::get('/index', [CouponContoller::class, 'index']);
-        // Route::post('/insert', [BookingController::class, 'store']);
-        // Route::post('update', [BookingController::class, 'statusUpdate']);
-        // Route::post('/delete', [LanguageController::class, 'languageDestroy']);
+        Route::post('/insert', [CouponContoller::class, 'store']);
+        Route::post('/update', [CouponContoller::class, 'update']);
+        Route::post('/delete', [LanguageController::class, 'destroy']);
 
     });
-    Route::group(['prefix' => 'booking'], function () {
-        Route::get('/index', [BookingController::class, 'index']);
-        Route::get('/show', [BookingController::class, 'show']);
-        Route::post('/insert', [BookingController::class, 'store']);
-        Route::post('/show/status/update', [BookingController::class, 'statusUpdate']);
-        Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
+    // Route::group(['prefix' => 'booking'], function () {
+    //     Route::get('/index', [BookingController::class, 'index']);
+    //     Route::get('/show', [BookingController::class, 'show']);
+    //     Route::post('/insert', [BookingController::class, 'store']);
+    //     Route::post('/show/status/update', [BookingController::class, 'statusUpdate']);
+    //     Route::post('/booking_period/update', [BookingController::class, 'bookingPeriodUpdate']);
 
-    });
+    // });
 
 });

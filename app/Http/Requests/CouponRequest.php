@@ -22,6 +22,7 @@ class CouponRequest extends BaseFormRequest
     public function update()
     {
         return [
+            'id'=>'required|integer',
             'name' => 'required|string|max:255',
             'percent'  => 'required|integer',
         ];

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Coupon;
 use App\Models\Notification_;
 use App\Http\Requests\CouponRequest;
+use App\Models\Constants;
+
 
 class CouponContoller extends Controller
 {
@@ -24,14 +26,14 @@ class CouponContoller extends Controller
         return ['all_task'=>$all_task, 'all_booking'=>$all_booking];
     }
 
-    public function index(Requeswt $request)
+    public function index(Request $request)
     {
     //  dd('fefsefsfs');
 
 
 
 
-        $coupons = Coupon::orderBy('id', 'desc')->toArray();
+        $coupons = Coupon::get()->toArray();
         // dd($coupons);
 
 
@@ -54,16 +56,6 @@ class CouponContoller extends Controller
 
 
 
-
-
-
-
-        
-        // $model = Coupon::orderBy('id', 'desc');
-        // return view('forthebuilder::coupon.index')->with([
-        //     'model' => $model,
-        //     'all_notifications' => $this->getNotification()
-        // ]);
     }
 
     /**
@@ -84,13 +76,17 @@ class CouponContoller extends Controller
      */
     public function store(CouponRequest $request)
     {
+
         $data = $request->validated();
 
         $model = new Coupon();
         $model->name = $data['name'];
         $model->percent = $data['percent'];
         if ($model->save())
-            return true;
+        return response([
+            'status' => true,
+            'message' => 'success'
+        ]);
 
         // return redirect()->route('forthebuilder.coupon.index')->with('success', __('locale.successfully'));
     }
@@ -115,15 +111,26 @@ class CouponContoller extends Controller
      * @param int $id
      * @return Renderable
      */
-    public function update(CouponRequest $request, $id)
+    public function update(CouponRequest $request)
     {
         $data = $request->validated();
 
-        $model = Coupon::find($id);
-        $model->name = $data['name'];
-        $model->percent = $data['percent'];
-        if ($model->save())
-            return true;
+        if ($model=Coupon::find($request->id)) {
+            // dd($model);
+            $model->name = $data['name'];
+            $model->percent = $data['percent'];
+            if ($model->save())
+            return response([
+                'status' => true,
+                'message' => 'success'
+            ]);
+        }
+        return response([
+            'status' => false,
+            'message' => 'error',
+
+        ]);
+      
 
         // return redirect()->route('forthebuilder.coupon.index')->with('success', __('locale.successfully'));
     }
@@ -133,10 +140,23 @@ class CouponContoller extends Controller
      * @param int $id
      * @return Renderable
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        $model = Coupon::find($id);
-        $model->delete();
-        return redirect()->route('forthebuilder.coupon.index')->with('deleted', translate('Data deleted successfuly'));
+        dd($request->all());
+        if ($model = Coupon::find($request->id)) {
+            $model = Coupon::find($request->id);
+            // dd($model);
+            $model->delete();
+            return response([
+                'status' => true,
+                'message' => 'success'
+            ]);
+        }
+        return response([
+            'status' => false,
+            'message' => 'error'
+        ]);
+        
+        // return redirect()->route('forthebuilder.coupon.index')->with('deleted', translate('Data deleted successfuly'));
     }
 }
