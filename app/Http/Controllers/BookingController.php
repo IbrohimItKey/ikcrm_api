@@ -68,14 +68,13 @@ class BookingController extends Controller
             }
         }
 
-
         $page = $request->page;
-        $pagination = Constants::PAGINATION; 
+        $pagination = Constants::PAGINATION;
         $offset = ($page - 1) * $pagination;
         $endCount = $offset + $pagination;
         $count = count($list);
-        $paginated_results=array_slice($list, $offset, $pagination);
-        $paginatin_count=ceil($count/$pagination);
+        $paginated_results = array_slice($list, $offset, $pagination);
+        $paginatin_count = ceil($count/$pagination);
         return response([
             'status' => true,
             'message' => 'success',
@@ -83,10 +82,6 @@ class BookingController extends Controller
             "pagination"=>true,
             "pagination_count"=>$paginatin_count
         ]);
-
-
-
-
 
 
         // dd($list);
@@ -194,7 +189,7 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
-        
+
         $user = Auth::user();
         $booking = Booking::where(['house_flat_id' => $request->house_flat_id, 'status' => Constants::BOOKING_ACTIVE])->first();
         // $booking_any = House::first();
@@ -331,7 +326,7 @@ class BookingController extends Controller
 
 
         // return $booking->notification_date;
-       
+
         // return redirect()->route('forthebuilder.booking.index')->with('success', __('locale.Prepayment has been added'));
     }
 
@@ -573,7 +568,7 @@ class BookingController extends Controller
         return response([
             'status' => true,
             'message' => 'success',
-       
+
         ]);
 
         // return 'true';

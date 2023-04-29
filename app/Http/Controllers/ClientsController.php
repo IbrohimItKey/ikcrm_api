@@ -49,7 +49,7 @@ class ClientsController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/clients",
+     *     path="/api/clients/index",
      *     tags={"Clients"},
      *     summary="Get Clients",
      *     description="Get Clients",
@@ -119,8 +119,37 @@ class ClientsController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     * @return Renderable
+     * @OA\Get(
+     *     path="/api/clients/all-clients",
+     *     tags={"Clients"},
+     *     summary="Get Clients",
+     *     description="Get Clients",
+     *     operationId="allClients",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
+
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
      */
     public function allClients()
     {
@@ -155,7 +184,95 @@ class ClientsController extends Controller
      * @param Request $request
      * @return Renderable
      */
-
+    /**
+     * @OA\Post(
+     *     path="/api/clients/insert",
+     *     tags={"Clients"},
+     *     summary="Updates a client in the store with form data",
+     *     operationId="insert",
+     *     @OA\Parameter(
+     *         name="petId",
+     *         in="path",
+     *         description="ID of pet that needs to be updated",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer",
+     *             format="int64"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="application/x-www-form-urlencoded",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="first_name",
+     *                     description="Updated first name",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="last_name",
+     *                     description="Updated last name",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="middle_name",
+     *                     description="Updated middle name",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="phone",
+     *                     description="Updated phone",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="additional_phone_number",
+     *                     description="Updated additional phone",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="email",
+     *                     description="Updated email",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="source",
+     *                     description="Updated source",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="issued_by",
+     *                     description="Updated issued by",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="series_number",
+     *                     description="Updated series number",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="inn",
+     *                     description="Updated inn",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="looking_for",
+     *                     description="Updated looking for",
+     *                     type="string"
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function insert(ClientsRequest $request)
     {
         $data = $request->validated();
@@ -201,10 +318,73 @@ class ClientsController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     * @param Request $request
-     * @param int $id
-     * @return Renderable
+     * @OA\Post(
+     *     path="/api/clients/update",
+     *     tags={"Clients"},
+     *     summary="Updates a client in the store with form data",
+     *     operationId="update",
+     *     @OA\Parameter(
+     *         name="petId",
+     *         in="path",
+     *         description="ID of pet that needs to be updated",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer",
+     *             format="int64"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="application/x-www-form-urlencoded",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="first_name",
+     *                     description="Updated first name",
+     *                     type="string",
+     *                 ),
+     *                 @OA\Property(
+     *                     property="last_name",
+     *                     description="Updated last name",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="middle_name",
+     *                     description="Updated middle name",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="phone",
+     *                     description="Updated phone",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="additional_phone_number",
+     *                     description="Updated additional phone",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="email",
+     *                     description="Updated email",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="source",
+     *                     description="Updated source",
+     *                     type="string"
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function update(ClientsRequest $request)
     {
@@ -225,9 +405,43 @@ class ClientsController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     * @param int $id
-     * @return Renderable
+     * @OA\Post(
+     *     path="/api/clients/delete",
+     *     tags={"Clients"},
+     *     summary="Delete a client in the store with form data",
+     *     operationId="delete",
+     *     @OA\Parameter(
+     *         name="petId",
+     *         in="path",
+     *         description="ID of pet that needs to be updated",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer",
+     *             format="int64"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=405,
+     *         description="Invalid input"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     *     @OA\RequestBody(
+     *         description="Input data format",
+     *         @OA\MediaType(
+     *             mediaType="application/x-www-form-urlencoded",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     description="Deleted id",
+     *                     type="string",
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function delete(Request $request)
     {
@@ -303,7 +517,39 @@ class ClientsController extends Controller
             return $e->getMessage();
         }
     }
+    /**
+     * @OA\Get(
+     *     path="/api/clients/show",
+     *     tags={"Clients"},
+     *     summary="Get Client",
+     *     description="Get Client",
+     *     operationId="show",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
 
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
+     */
     public function show(Request $request)
     {
         $id = $request->id;
@@ -471,7 +717,39 @@ class ClientsController extends Controller
         $responce = ['status' => true, 'message' => 'success', 'data' => $arr];
         return response($responce);
     }
+    /**
+     * @OA\Get(
+     *     path="/api/calendar/index",
+     *     tags={"Calendar"},
+     *     summary="Get calendar",
+     *     description="Get calendar",
+     *     operationId="calendar",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
 
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
+     */
     public function calendar()
     {
         $user = Auth::user();
@@ -502,10 +780,104 @@ class ClientsController extends Controller
         return response($response);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/calendar/get-user",
+     *     tags={"Calendar"},
+     *     summary="Get calendar",
+     *     description="Get calendar",
+     *     operationId="getUsers",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
+
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
+     */
+    public function getUsers()
+    {
+        $users = User::select('id', 'first_name')->get();
+        $response = [
+            "status" => true,
+            "message" => "success",
+            'data' => $users,
+        ];
+        return $response;
+    }
+    /**
+     * @OA\Get(
+     *     path="/api/calendar/get-deal",
+     *     tags={"Calendar"},
+     *     summary="Get calendar",
+     *     description="Get calendar",
+     *     operationId="getDeals",
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Status values that needed to be considered for filter",
+     *         required=true,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="available",
+     *             type="string",
+     *             enum={"available", "pending", "sold"},
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
+
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     ),
+     *     security={
+     *         {"bearer_token": {}}
+     *     },
+     * )
+     */
+    public function getDeals()
+    {
+        $deals = Deal::where('status', 1)->get();
+        foreach ($deals as $deal) {
+            $deal_[] = [
+                'id' => $deal->id,
+                'first_name' => $deal->client->first_name,
+                'last_name' => $deal->client->last_name,
+                'middle_name' => $deal->client->middle_name,
+            ];
+        }
+        $response = [
+            "status" => true,
+            "message" => "success",
+            'data' => $deal_,
+        ];
+        return $response;
+    }
+
     public function storeBudget(Request $request)
     {
         $client_id = $request->client_id;
-
         $user = Auth::user();
         $model = Deal::find($request->deal_id);
         date_default_timezone_set("Asia/Tashkent");

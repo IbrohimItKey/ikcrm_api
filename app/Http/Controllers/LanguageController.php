@@ -148,33 +148,66 @@ class LanguageController extends Controller
         // return 'came';
 
     }
-    public function show(Request $request, $id)
+
+
+    // public function aaaaa(Request $request)
+    // {
+    //     return 'fsefse';
+
+    // }
+
+
+
+
+    public function innershow(Request $request)
     {
+        // dd($request->all());
         $sort_search = null;
-        $language = Language::findOrFail(decrypt($id));
-        // dd();
-        $lang_keys = Translation::where('lang', env('DEFAULT_LANGUAGE', 'en'))->get();
+        $language = Language::findOrFail($request->language_id);
+        // dd($language);
+        $lang_keys = Translation::where('lang', env('DEFAULT_LANGUAGE', 'en'))->get()->toArray();
         if ($request->has('search')) {
             $sort_search = $request->search;
             // dd($sort_search);
             // $lang_keys = $lang_keys->where('lang_key', 'like', '%' . $sort_search . '%');
-            $lang_keys = $lang_keys->where('lang_key', request()->input('search'));
+            $lang_keys = $lang_keys->where('lang_key', request()->input('search'))->toArray();
             // dd(request()->input('search'));
         }
         // $lang_keys = $lang_keys->paginate(10);
         // $lang_keys = $lang_keys->orderByDesc()->paginate(10);
-        $lang_keys = $lang_keys->paginate(10);
+        // $lang_keys = $lang_keys->paginate(10);
         // dd($lang_keys);
 
 
-
-        // dd($lang_keys);
-        return view('forthebuilder::language.show', [
+        $page = $request->page;
+        $pagination = Constants::PAGINATION; 
+        $offset = ($page - 1) * $pagination;
+        $endCount = $offset + $pagination;
+        $count = count($lang_keys);
+        // dd($count);
+        $paginated_results=array_slice($lang_keys, $offset, $pagination);
+        $paginatin_count=ceil($count/$pagination);
+        return response([
+            'status' => true,
+            'message' => 'success',
             'language' => $language,
-            'lang_keys' => $lang_keys,
             'sort_search' => $sort_search,
-            'all_notifications' => $this->getNotification()
+            'data' => $paginated_results,
+            "pagination"=>true,
+            "pagination_count"=>$paginatin_count
         ]);
+
+
+
+
+
+        // dd($lang_keys);
+        // return view('forthebuilder::language.show', [
+        //     'language' => $language,
+        //     'lang_keys' => $lang_keys,
+        //     'sort_search' => $sort_search,
+        //     'all_notifications' => $this->getNotification()
+        // ]);
     }
 
 
