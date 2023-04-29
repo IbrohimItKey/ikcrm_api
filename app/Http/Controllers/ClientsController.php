@@ -501,4 +501,57 @@ class ClientsController extends Controller
         ];
         return response($response);
     }
+
+    public function storeBudget(Request $request)
+    {
+        $client_id = $request->client_id;
+
+        $user = Auth::user();
+        $model = Deal::find($request->deal_id);
+        date_default_timezone_set("Asia/Tashkent");
+        if (isset($request->budget)) {
+            $model->budget = (float)$request->budget;
+        }
+        if (isset($request->looking_for)) {
+            $model->looking_for = $request->looking_for;
+        }
+        if (isset($request->house_id)) {
+            $model->house_id = $request->house_id;
+        }
+        if (isset($request->house_flat_id)) {
+            $model->house_flat_id = $request->house_flat_id;
+        }
+        if ($model->history == NULL) {
+            $model->history = json_encode([['date' => date('Y-m-d H:i:s'), 'user' => $user->first_name, 'user_id' => $user->id, 'user_photo' => $user->avatar, 'new_type' => $request->type, 'old_type' => $model->type]]);
+        } else {
+            $old_history = json_decode($model->history);
+            $old_history[] = ['date' => date('Y-m-d H:i:s'), 'user' => $user->first_name, 'user_id' => $user->id,  'user_photo' => $user->avatar, 'new_type' => $request->type, 'old_type' => $model->type];
+            $model->history = json_encode($old_history);
+        }
+        $model->type = $request->type;
+        if (isset($request->series_number) && isset($request->issued_by) && isset($request->inn)) {
+            if (isset($request->personal_id)) {
+                $personal = PersonalInformations::find($request->personal_id);
+                $personal->series_number = $request->series_number;
+                $personal->issued_by = $request->issued_by;
+                $personal->inn = $request->inn;
+            } else {
+                $personal = new PersonalInformations();
+                $personal->series_number = $request->series_number;
+                $personal->issued_by = $request->issued_by;
+                $personal->inn = $request->inn;
+                $personal->client_id = $client_id;
+            }
+            $personal->save();
+        }
+        $model->save();
+
+        $response = [
+            "status" => true,
+            "message" => "success",
+            // "data" => $tasks
+        ];
+        return response($response);
+        // return redirect()->route('forthebuilder.clients.show', [$model->client_id, "0", "0"])->with('status', translate('successfully'));
+    }
 }
